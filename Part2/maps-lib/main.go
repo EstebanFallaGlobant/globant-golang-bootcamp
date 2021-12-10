@@ -8,7 +8,7 @@ import (
 
 func main() {
 	s := "Test of word counter, this is a test"
-	wordMap := wordcounter.WordCount(s)
+	wordMap := wordcounter.WordCountCaseInsensitive(s)
 
 	fmt.Print(wordMap)
 	fmt.Println()
