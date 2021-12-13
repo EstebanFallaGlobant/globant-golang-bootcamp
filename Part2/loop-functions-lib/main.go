@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	sqrroot "github.com/EstebanFallaGlobant/globant-golang-bootcamp/Part2/loop-functions-lib/sqr-root"
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/Part2/loop-functions-lib/sqrroot"
 )
 
 func main() {
