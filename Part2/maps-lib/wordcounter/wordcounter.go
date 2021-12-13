@@ -1,11 +1,15 @@
 package wordcounter
 
-import "strings"
+import (
+	"fmt"
+	"regexp"
+	"strings"
+)
 
 func WordCountCaseInsensitive(s string) map[string]int {
 	result := make(map[string]int)
 	var word string
-	fields := strings.Fields(s)
+	fields := splitByRegex(s)
 
 	for i := 0; i < len(fields); i++ {
 		word = strings.ToLower(fields[i])
@@ -21,7 +25,9 @@ func WordCountCaseInsensitive(s string) map[string]int {
 func WordCount(s string) map[string]int {
 	result := make(map[string]int)
 	var word string
-	fields := strings.Fields(s)
+	fields := splitByRegex(s)
+
+	fmt.Printf("%v\n", fields)
 
 	for i := 0; i < len(fields); i++ {
 		word = fields[i]
@@ -31,5 +37,11 @@ func WordCount(s string) map[string]int {
 			result[word] = 1
 		}
 	}
+	return result
+}
+
+func splitByRegex(text string) []string {
+	re := regexp.MustCompile(`\w+`)
+	result := re.FindAllString(text, -1)
 	return result
 }
