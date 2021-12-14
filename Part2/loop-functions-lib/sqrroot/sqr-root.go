@@ -1,11 +1,19 @@
 package sqrroot
 
+import (
+	"errors"
+)
+
 const TotalSteps = 100
 const ErrorMargin = 0
 const initialValue = 1
 
 //Using the Newton's aproximation method returns the square root of a number, also returns all the steps of the aproximation
 func SqrtFullRun(value float64) ([]float64, float64) {
+	if value < 0 {
+		panic(errors.New("invalid number"))
+	}
+
 	var steps []float64
 	var z float64 = float64(initialValue)
 
@@ -19,6 +27,10 @@ func SqrtFullRun(value float64) ([]float64, float64) {
 
 //Using the Newton's aproximation returns the square root of a number, also returns the number of steps taken to find the result
 func Sqrt(value float64) (float64, int) {
+	if value < 0 {
+		panic(errors.New("invalid number"))
+	}
+
 	var z, temp float64 = float64(initialValue), 0
 	i := 0
 	for i < TotalSteps {
