@@ -3,7 +3,7 @@ on: [push]
 jobs:
   lint:
     name: Run Lint
-    runs-on: 'ububtu-latest'
+    runs-on: 'self-host'
     steps:
       - uses: actions/checkout@2.4.0
       - uses: actions/setup-go@v2
@@ -15,7 +15,7 @@ jobs:
           version: latest
   test:
     name: Run Tests
-    runs-on: 'ububtu-latest'
+    runs-on: 'self-host'
     needs: lint
     steps:
       - uses: actions/checkout@v2.4.0
