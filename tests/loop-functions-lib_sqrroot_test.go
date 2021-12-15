@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/Part2/loop-functions-lib/sqrroot"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_SqrtFullRun_ValidNumber(t *testing.T) {
@@ -11,23 +12,15 @@ func Test_SqrtFullRun_ValidNumber(t *testing.T) {
 
 	_, result := sqrroot.SqrtFullRun(initialNumber)
 
-	if result != expectedResult {
-		t.Fatalf("Expected: %g. Got: %g", expectedResult, result)
-	}
+	assert.Equal(t, expectedResult, result)
 }
 
 func TestSqrtFullRun_InvalidNumber(t *testing.T) {
 	initialNumber := float64(-4)
 
-	defer func() {
-		if r := recover().(error); r == nil {
-			t.Fatal()
-		}
-	}()
+	assert.Panics(t, func() {
+		_, result := sqrroot.SqrtFullRun(initialNumber)
 
-	_, result := sqrroot.SqrtFullRun(initialNumber)
-
-	if result != 0 {
-		t.Fatalf("The function din't panic. Got: %g. Expected: panic", result)
-	}
+		t.Log(result)
+	})
 }
