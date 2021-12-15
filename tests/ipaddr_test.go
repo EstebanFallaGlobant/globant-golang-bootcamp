@@ -5,13 +5,16 @@ import (
 	"testing"
 
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/Part2/methods-types-structures/mts/ipaddr"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIPAddrStringer(t *testing.T) {
 	ipStr := "127.0.0.1"
 	ip := ipaddr.IPAddr{127, 0, 0, 1}
 	str := fmt.Sprint(ip)
-	if str != ipStr {
-		t.Errorf("IPAddr type string conversion failed. Got: %s, Want: %s", str, ipStr)
-	}
+	// if str != ipStr {
+	// 	t.Errorf("IPAddr type string conversion failed. Got: %s, Want: %s", str, ipStr)
+	// }
+
+	assert.Equal(t, ipStr, str)
 }

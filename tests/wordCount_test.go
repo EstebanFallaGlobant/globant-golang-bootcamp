@@ -1,10 +1,10 @@
 package tests
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/Part2/maps-lib/wordcounter"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_WordCountCaseInsensitive_ThreeWordsNoRepeat(t *testing.T) {
@@ -16,19 +16,14 @@ func Test_WordCountCaseInsensitive_ThreeWordsNoRepeat(t *testing.T) {
 
 	wordCount := wordcounter.WordCountCaseInsensitive(testPhrase)
 
-	if v := reflect.DeepEqual(wordCount, testResult); !v {
-		t.Fatalf("The map %v isn't equeal to the expected map: %v\n", wordCount, testResult)
-	}
+	assert.EqualValues(t, testResult, wordCount)
 }
 func Test_WordCountCaseInsensitive_EmptyString(t *testing.T) {
 	testPhrase := ""
-	testResult := make(map[string]int)
 
 	wordCount := wordcounter.WordCountCaseInsensitive(testPhrase)
 
-	if len(wordCount) != 0 {
-		t.Fatalf("The map %v is not empty, expected: %v\n", wordCount, testResult)
-	}
+	assert.Empty(t, wordCount)
 }
 
 func Test_WordCountCaseInsensitive_WordRepeatSameCase(t *testing.T) {
@@ -36,9 +31,7 @@ func Test_WordCountCaseInsensitive_WordRepeatSameCase(t *testing.T) {
 
 	wordCount := wordcounter.WordCountCaseInsensitive(testPhrase)
 
-	if v := wordCount[resultKey]; v != resultValue {
-		t.Fatalf("The value of the key \"%s\" is different from the expected. Expected: %d, Got: %d\n", resultKey, resultValue, v)
-	}
+	assert.EqualValues(t, resultValue, wordCount[resultKey])
 }
 
 func Test_WordCountCaseInsensitive_WordRepeatDifferentCase(t *testing.T) {
@@ -46,9 +39,7 @@ func Test_WordCountCaseInsensitive_WordRepeatDifferentCase(t *testing.T) {
 
 	wordCount := wordcounter.WordCountCaseInsensitive(testPhrase)
 
-	if v := wordCount[resultKey]; v != resultValue {
-		t.Fatalf("The value of the key \"%s\" is different from the expected. Expected: %d, Got: %d\n", resultKey, resultValue, v)
-	}
+	assert.EqualValues(t, resultValue, wordCount[resultKey])
 }
 
 func Test_WordCount_ThreeWordsNoRepeat(t *testing.T) {
@@ -56,11 +47,8 @@ func Test_WordCount_ThreeWordsNoRepeat(t *testing.T) {
 
 	wordCount := wordcounter.WordCount(testPhrase)
 
-	t.Log(wordCount)
-	for key, val := range wordCount {
-		if val != expectedValue {
-			t.Fatalf("The key \"%s\" has an incorrect value. Expected: %d. Got: %d\n", key, expectedValue, val)
-		}
+	for _, val := range wordCount {
+		assert.EqualValues(t, expectedValue, val)
 	}
 }
 
@@ -69,9 +57,7 @@ func Test_WordCount_SingleWordRepeatedSameCase(t *testing.T) {
 
 	wordCount := wordcounter.WordCount(testPhrase)
 
-	if v := wordCount[expectedKey]; v > expectedValue {
-		t.Fatalf("The key \"%s\" has an incorrect value. Expected: %d. Got: %d\n", expectedKey, expectedValue, v)
-	}
+	assert.EqualValues(t, expectedValue, wordCount[expectedKey])
 }
 
 func Test_WordCount_SingleWordRepeatedDifferentCase(t *testing.T) {
@@ -79,9 +65,8 @@ func Test_WordCount_SingleWordRepeatedDifferentCase(t *testing.T) {
 
 	wordCount := wordcounter.WordCount(testPhrase)
 
-	if v1, v2 := wordCount[expectedKey1], wordCount[expectedKey2]; v1 != expectedValue || v2 != expectedValue {
-		t.Fatal()
-	}
+	assert.EqualValues(t, expectedValue, wordCount[expectedKey1])
+	assert.EqualValues(t, expectedValue, wordCount[expectedKey2])
 }
 
 func Test_WordCount_EmptyString(t *testing.T) {
@@ -89,7 +74,5 @@ func Test_WordCount_EmptyString(t *testing.T) {
 
 	wordCount := wordcounter.WordCount(testPhrase)
 
-	if val, expr := len(wordCount), 0; val != expr {
-		t.Fatalf("The word count is incorrect. Expected: %d. Got: %d}n", expr, val)
-	}
+	assert.Empty(t, wordCount)
 }
