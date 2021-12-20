@@ -1,7 +1,5 @@
 package math
 
-import "fmt"
-
 const iterations = 100
 
 //
@@ -46,7 +44,7 @@ func Sqrt(value interface{}) (float64, error) {
 	for i := 0; i < iterations; i++ {
 		result -= newtonAprox(result, num)
 
-		if v, _ := Abs(temp - result); v == float64(0) {
+		if v := abs(temp - result); v == float64(0) {
 			break
 		}
 		temp = result
@@ -58,34 +56,13 @@ RETURNERROR:
 	return 0, ErrNegativeSqrt(num)
 }
 
-func Abs(value interface{}) (float64, error) {
-	var num float64
+func abs(value float64) float64 {
 
-	switch v := value.(type) {
-	case int:
-	case int8:
-	case int16:
-	case int32:
-	case int64:
-	case uint:
-	case uint8:
-	case uint16:
-	case uint32:
-	case uint64:
-	case float32:
-		num = float64(v)
-	case float64:
-		num = v
-
-	default:
-		return 0, fmt.Errorf("value %t is not a valid number", value)
+	if value < 0 {
+		return -value
 	}
 
-	if num < 0 {
-		return -num, nil
-	}
-
-	return num, nil
+	return value
 }
 
 //Returns a number close to the square root of the value passed as parameter, using a previous aproximation and the powered value

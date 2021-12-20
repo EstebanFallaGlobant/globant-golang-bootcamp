@@ -29,8 +29,8 @@ func (app *App) Initialize(wordCounter interfaces.WordCounterInterface) {
 	app.Router = mux.NewRouter()
 
 	for _, handler := range handlers {
-		handerFunc := handler.Handler(app)
-		app.Router.HandleFunc(handler.Path, handerFunc).Methods(handler.Method)
+		handlerFunc := handler.Handler(app)
+		app.Router.HandleFunc(handler.Path, handlerFunc).Methods(handler.Method)
 	}
 }
 
