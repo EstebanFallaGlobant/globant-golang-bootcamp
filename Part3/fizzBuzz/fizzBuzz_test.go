@@ -1,9 +1,8 @@
-package tests
+package fizzBuzz
 
 import (
 	"testing"
 
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/Part3/fizzBuzz"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,7 +60,7 @@ func Test_FizzBuzz(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expectedResult, fizzBuzz.FizzBuzz(tt.input))
+			assert.Equal(t, tt.expectedResult, FizzBuzz(tt.input))
 		})
 	}
 }

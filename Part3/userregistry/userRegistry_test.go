@@ -1,9 +1,8 @@
-package tests
+package userregistry
 
 import (
 	"testing"
 
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/Part3/userregistry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -24,7 +23,7 @@ func Test_userRegister_ValidEmailAndPass(t *testing.T) {
 	register := new(mockRegister)
 	register.On("Register", email, pass).Return(200, nil)
 
-	userRegister := userregistry.UserRegister{Reg: register}
+	userRegister := UserRegister{Reg: register}
 
 	userId, err := userRegister.Register(email, pass)
 
@@ -38,7 +37,7 @@ func Test_userRegister_InvalidEmail(t *testing.T) {
 	register := new(mockRegister)
 	register.On("Register", email, pass).Return(200, nil)
 
-	userRegister := userregistry.UserRegister{Reg: register}
+	userRegister := UserRegister{Reg: register}
 
 	userId, err := userRegister.Register(email, pass)
 
@@ -52,7 +51,7 @@ func Test_userRegister_InvalidPassword(t *testing.T) {
 	register := new(mockRegister)
 	register.On("Register", email, pass).Return(200, nil)
 
-	userRegister := userregistry.UserRegister{Reg: register}
+	userRegister := UserRegister{Reg: register}
 
 	userId, err := userRegister.Register(email, pass)
 
