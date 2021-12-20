@@ -21,6 +21,7 @@ func Test_WordCounterAPI(t *testing.T) {
 		handler            string
 		expectedStatus     int
 		expectedCollection []wcStructs.WordCount
+		panics             bool
 	}{
 		{
 			name:               "Test with valid string",
@@ -38,12 +39,25 @@ func Test_WordCounterAPI(t *testing.T) {
 			method:             "GET",
 			handler:            "count",
 		},
+		{
+			name:           "Test with panic",
+			expectedStatus: 500,
+			method:         "GET",
+			panics:         true,
+			handler:        "count",
+			input:          "This must fail",
+		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := new(wcStructs.MockWordCounter)
-			mock.On("CountWords", tt.input).Return(tt.expectedCollection)
+			if tt.panics {
+				mock.On("CountWords", tt.input).Panic(tt.input)
+
+			} else {
+				mock.On("CountWords", tt.input).Return(tt.expectedCollection)
+			}
 
 			app.Initialize(mock)
 

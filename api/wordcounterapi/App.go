@@ -19,7 +19,7 @@ type App struct {
 var handlers []handler = []handler{
 	{
 		Path:    "/count/{text}",
-		Handler: createHandler,
+		Handler: countHandler,
 		Method:  "GET",
 	},
 }
@@ -38,23 +38,35 @@ func (app *App) Kill(status int) {
 	os.Exit(status)
 }
 
-func createHandler(app *App) func(w http.ResponseWriter, r *http.Request) {
+func countHandler(app *App) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		var resp structs.WordCounterResponse
+		var hasError bool
 
-		if text := mux.Vars(r)["text"]; util.IsEmptyString(text) {
-			resp = structs.WordCounterResponse{
-				Status: http.StatusBadRequest,
+		defer func() {
+			if recover() != nil {
+				resp = structs.WordCounterResponse{
+					Status:         http.StatusInternalServerError,
+					WordCollection: make([]structs.WordCount, 0),
+				}
+				hasError = true
 			}
-		} else {
-			resp = structs.WordCounterResponse{
-				Status:         http.StatusOK,
-				WordCollection: app.wordCounter.CountWords(text),
+			w.WriteHeader(resp.Status)
+			json.NewEncoder(w).Encode(resp)
+		}()
+
+		if !hasError {
+			if text := mux.Vars(r)["text"]; util.IsEmptyString(text) {
+				resp = structs.WordCounterResponse{
+					Status: http.StatusBadRequest,
+				}
+			} else {
+				resp = structs.WordCounterResponse{
+					Status:         http.StatusOK,
+					WordCollection: app.wordCounter.CountWords(text),
+				}
 			}
 		}
-
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(resp)
 	}
 }
