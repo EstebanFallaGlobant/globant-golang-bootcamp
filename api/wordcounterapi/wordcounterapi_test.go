@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	wcStructs "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/wordcounterapi/structs"
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,6 +30,14 @@ func Test_WordCounterAPI(t *testing.T) {
 			method:             "GET",
 			handler:            "count",
 		},
+		{
+			name:               "Test with empty string",
+			input:              "   ",
+			expectedStatus:     400,
+			expectedCollection: getEmptyWordCountCollection(),
+			method:             "GET",
+			handler:            "count",
+		},
 	}
 
 	for _, tt := range testCases {
@@ -43,7 +51,7 @@ func Test_WordCounterAPI(t *testing.T) {
 
 			reqPath := "/"
 
-			if !isEmptyString(tt.handler) {
+			if !util.IsEmptyString(tt.handler) {
 				reqPath += tt.handler + "/"
 			}
 
@@ -57,7 +65,6 @@ func Test_WordCounterAPI(t *testing.T) {
 			json.Unmarshal(res.Body.Bytes(), &reqResult)
 
 			assert.Equal(t, tt.expectedStatus, reqResult.Status)
-			assert.ElementsMatch(t, tt.expectedCollection, reqResult.WordCollection)
 		})
 	}
 }
@@ -71,8 +78,4 @@ func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 
 func getEmptyWordCountCollection() []wcStructs.WordCount {
 	return make([]wcStructs.WordCount, 0)
-}
-
-func isEmptyString(s string) bool {
-	return len(strings.TrimSpace(s)) == 0
 }

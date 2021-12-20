@@ -3,9 +3,11 @@ package wordcounterapi
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/wordcounterapi/interfaces"
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/wordcounterapi/structs"
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/util"
 	"github.com/gorilla/mux"
 )
 
@@ -32,14 +34,24 @@ func (app *App) Initialize(wordCounter interfaces.WordCounterInterface) {
 	}
 }
 
+func (app *App) Kill(status int) {
+	os.Exit(status)
+}
+
 func createHandler(app *App) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
+
 		var resp structs.WordCounterResponse
 
-		resp = structs.WordCounterResponse{
-			Status:         http.StatusOK,
-			WordCollection: app.wordCounter.CountWords(vars["text"]),
+		if text := mux.Vars(r)["text"]; util.IsEmptyString(text) {
+			resp = structs.WordCounterResponse{
+				Status: http.StatusBadRequest,
+			}
+		} else {
+			resp = structs.WordCounterResponse{
+				Status:         http.StatusOK,
+				WordCollection: app.wordCounter.CountWords(text),
+			}
 		}
 
 		w.WriteHeader(http.StatusOK)
