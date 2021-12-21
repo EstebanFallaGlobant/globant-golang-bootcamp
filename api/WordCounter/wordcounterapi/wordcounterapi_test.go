@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	wcStructs "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/wordcounterapi/structs"
+	wcStructs "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/WordCounter/wordcounterapi/structs"
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/util"
 	"github.com/stretchr/testify/assert"
 )

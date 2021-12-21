@@ -3,10 +3,10 @@ package wordcounterapi
 import (
 	"encoding/json"
 	"net/http"
-	"os"
+	"time"
 
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/wordcounterapi/interfaces"
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/wordcounterapi/structs"
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/WordCounter/wordcounterapi/interfaces"
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/WordCounter/wordcounterapi/structs"
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/util"
 	"github.com/gorilla/mux"
 )
@@ -34,8 +34,14 @@ func (app *App) Initialize(wordCounter interfaces.WordCounterInterface) {
 	}
 }
 
-func (app *App) Kill(status int) {
-	os.Exit(status)
+func (app *App) Run(addr string) *http.Server {
+	return &http.Server{
+		Addr:         addr,
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler:      app.Router,
+	}
 }
 
 func countHandler(app *App) func(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +65,8 @@ func countHandler(app *App) func(w http.ResponseWriter, r *http.Request) {
 		if !hasError {
 			if text := mux.Vars(r)["text"]; util.IsEmptyString(text) {
 				resp = structs.WordCounterResponse{
-					Status: http.StatusBadRequest,
+					Status:         http.StatusBadRequest,
+					WordCollection: []structs.WordCount{},
 				}
 			} else {
 				resp = structs.WordCounterResponse{
