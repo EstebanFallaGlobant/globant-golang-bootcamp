@@ -1,12 +1,19 @@
-name: Run-Non-API-Unit-Tests
-on: 
-  workflow_run:
-    workflows: ["Run-Lint"]
-    types:
-      - completed
+name: Run-Unit-Tests
+on: [push]
 jobs:
+  lint:
+    name: Run Lint
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.17.5'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2.5.2
+        with:
+          version: latest
   test:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Run Tests
     runs-on: self-hosted
     needs: lint
