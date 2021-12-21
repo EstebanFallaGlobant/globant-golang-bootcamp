@@ -9,8 +9,8 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/WordCounter/wordcounterapi"
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/WordCounter/wordcounterapi/structs"
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/wordcounterapi/api"
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/wordcounterapi/structs"
 )
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 		addr = "127.0.0.1:8080"
 	}
 
-	var api wordcounterapi.App
+	var api api.App
 
 	api.Initialize(new(structs.WordCounter))
 

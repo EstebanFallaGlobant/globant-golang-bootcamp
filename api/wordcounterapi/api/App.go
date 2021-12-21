@@ -1,12 +1,12 @@
-package wordcounterapi
+package api
 
 import (
 	"encoding/json"
 	"net/http"
 	"time"
 
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/WordCounter/wordcounterapi/interfaces"
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/WordCounter/wordcounterapi/structs"
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/wordcounterapi/interfaces"
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/wordcounterapi/structs"
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/util"
 	"github.com/gorilla/mux"
 )

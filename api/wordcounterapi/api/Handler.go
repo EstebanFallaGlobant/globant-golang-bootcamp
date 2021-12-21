@@ -1,4 +1,4 @@
-package wordcounterapi
+package api
 
 import "net/http"
 
