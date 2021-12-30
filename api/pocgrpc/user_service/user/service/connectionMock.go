@@ -9,7 +9,7 @@ type connectionMock struct {
 	mock.Mock
 }
 
-func (connection *connectionMock) InsertUser(user repository.User) (int, error) {
+func (connection *connectionMock) InsertUser(user repository.User) (int64, error) {
 	args := connection.Called(user.Name, user.PwdHash, user.Age, user.Parent)
-	return args.Int(0), args.Error(1)
+	return int64(args.Int(0)), args.Error(1)
 }

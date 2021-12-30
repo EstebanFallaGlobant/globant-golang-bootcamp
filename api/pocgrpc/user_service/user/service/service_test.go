@@ -146,7 +146,7 @@ func Test_Service_CreateUser(t *testing.T) {
 				tc.userData.Age,
 				tc.userData.Parent).
 				Return(
-					tc.expectedResponse.Id,
+					int(tc.expectedResponse.Id),
 					tc.expectedError)
 
 			service := NewService(repo, logger)

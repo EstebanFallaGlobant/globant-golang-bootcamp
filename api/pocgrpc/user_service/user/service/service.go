@@ -15,7 +15,7 @@ type Service interface {
 }
 
 type service struct {
-	repository repository.Repository
+	repository Repository
 	log        log.Logger
 }
 
@@ -26,17 +26,19 @@ type CreateUserRequest struct {
 	Parent int64
 }
 type CreateUserResponse struct {
-	Id int
+	Id int64
 }
 
-func NewService(repo repository.Repository, logger log.Logger) *service {
+func NewService(repo Repository, logger log.Logger) *service {
 	return &service{
 		repository: repo,
 		log:        logger,
 	}
 }
 
-//Creates an user if the information provided is valid
+// Creates an user if the information provided is valid.
+//
+// The users name and password must not be empty strings.
 func (service *service) CreateUser(ctx context.Context, request CreateUserRequest) (*CreateUserResponse, error) {
 	var err error = nil
 	var params []string
@@ -50,7 +52,7 @@ func (service *service) CreateUser(ctx context.Context, request CreateUserReques
 		params = append(params, "password")
 	}
 
-	if id, v := 0, len(params) > 0; v {
+	if id, v := int64(0), len(params) > 0; v { // If one or more parameters were empty, creates a single error for all of them
 		err = apiErr.NewArgumentsRequiredError(params...)
 	} else if age := request.Age; age < 1 || age > 150 {
 		err = apiErr.NewInvalidArgumentsError("age", "between 1 and 150")

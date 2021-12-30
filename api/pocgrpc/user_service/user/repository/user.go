@@ -3,6 +3,7 @@ package repository
 import "database/sql"
 
 type User struct {
+	Id      int64
 	Name    string
 	PwdHash string
 	Age     uint8
