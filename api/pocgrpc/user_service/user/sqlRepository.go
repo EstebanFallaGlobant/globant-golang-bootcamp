@@ -1,4 +1,4 @@
-package repository
+package user
 
 import (
 	"database/sql"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 )
 
 const key = "Query Status"
@@ -28,19 +29,19 @@ func NewsqlRepository(logger log.Logger, db *sql.DB) *sqlRepository {
 }
 
 func (repo *sqlRepository) InsertUser(user User) (int64, error) {
-	repo.logger.Log(key, fmt.Sprintf("inserting user: %v", user))
+	level.Info(repo.logger).Log(key, fmt.Sprintf("inserting user: %v", user))
 
 	// Saves the name in lowercase to prevent user duplication on database
 	result, err := repo.db.Exec(InsertUserQuery, strings.ToLower(user.Name), user.PwdHash, user.Age, user.parent)
 
 	if err != nil {
-		repo.logger.Log(err)
+		level.Error(repo.logger).Log(key, err)
 		return 0, err
 	} else {
 		id, err := result.LastInsertId()
 
 		if err != nil {
-			repo.logger.Log(err)
+			level.Error(repo.logger).Log(key, err)
 			return 0, err
 		} else {
 			return id, nil
