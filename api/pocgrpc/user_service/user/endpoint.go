@@ -38,17 +38,17 @@ func makeGetCreateUserEndpoint(svc Service, logger kitlog.Logger) endpoint.Endpo
 
 		if !ok {
 			level.Error(logger).Log("message", "invalid request")
-			return nil, NewInvalidRequestError()
+			return CreateUserResponse{}, NewInvalidRequestError()
 		}
 
 		id, err := svc.CreateUser(ctx, req.User)
 
 		if err != nil {
 			level.Error(logger).Log("message", "error creating user")
-			return nil, errors.New("error creating user")
+			return CreateUserResponse{}, errors.New("error creating user")
 		}
 
-		return &CreateUserResponse{
+		return CreateUserResponse{
 			Id: id,
 		}, nil
 	}

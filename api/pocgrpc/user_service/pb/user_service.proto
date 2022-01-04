@@ -1,0 +1,26 @@
+syntax="proto3";
+
+package pocgrpc.user_service;
+
+option go_package = "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/pb";
+
+service UserDetailService {
+    rpc CreateUser (CreateUserRequest) returns (CreateUserResponse){}
+}
+
+message User {
+    int64 Id = 1;
+    string Name = 2;
+    string PwdHash = 3;
+    uint32 Age = 4;
+    int64 Parent = 5;
+}
+
+message CreateUserRequest{
+    string AuthToken = 1;
+    User user = 2;
+}
+
+message CreateUserResponse{
+    int64 Id = 1;
+}
