@@ -8,12 +8,7 @@ import (
 
 	kitlog "github.com/go-kit/log"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
-
-type mockService struct {
-	mock.Mock
-}
 
 func Test_CreateUserEndpoint(t *testing.T) {
 	TestCases := []struct {
@@ -105,12 +100,6 @@ func Test_CreateUserEndpoint(t *testing.T) {
 			tc.checkResponse(response, err, t)
 		})
 	}
-}
-
-func (mock *mockService) CreateUser(ctx context.Context, user User) (int64, error) {
-	args := mock.Called(ctx, user)
-
-	return int64(args.Int(0)), args.Error(1)
 }
 
 func getNewUser() User {
