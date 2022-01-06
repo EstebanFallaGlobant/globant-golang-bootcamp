@@ -44,8 +44,23 @@ func (repo *sqlRepository) InsertUser(user User) (int64, error) {
 			level.Error(repo.logger).Log(key, err)
 			return 0, err
 		} else {
+			level.Info(repo.logger).Log(key, fmt.Sprintf("user inserted with id: %d", id))
 			return id, nil
 		}
+	}
+}
+
+func (repo *sqlRepository) GetUser(id int64) (User, error) {
+	level.Info(repo.logger).Log(key, fmt.Sprintf("querying for user with id: %d", id))
+	var user User
+
+	if err := repo.db.QueryRow(SelectUserQuery, id).Scan(&user.Id, &user.PwdHash, &user.Name, &user.Age, &user.parent); err != nil {
+		level.Error(repo.logger).Log(key, err)
+		return User{}, err
+	} else {
+		level.Info(repo.logger).Log(key, fmt.Sprintf("user found: %v", user))
+		user.Parent = user.parent.Int64
+		return user, nil
 	}
 }
 

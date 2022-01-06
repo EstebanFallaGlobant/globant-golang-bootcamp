@@ -46,17 +46,25 @@ func makeDecodeCreateUserRequest(logger kitlog.Logger) grpc.DecodeRequestFunc {
 			return nil, status.Error(codes.FailedPrecondition, "request couldn't be parsed")
 		} else {
 			level.Info(logger).Log("message", "request decoded")
-			user := req.User
-			return CreateUserRequest{AuthToken: req.AuthToken, User: NewUser(user.Name, user.PwdHash, uint8(user.Age), user.Parent)}, nil
+			if user, err := NewUser(req.User.Name, req.User.PwdHash, uint8(req.User.Age), req.User.Parent); err != nil {
+				level.Error(logger).Log("error creating new user type", err)
+				return nil, status.Error(codes.Internal, NewInvalidRequestError().Error())
+			} else {
+				return createUserRequest{authToken: req.AuthToken, user: user}, nil
+			}
+
 		}
 	}
 }
 
 func makeEncodeCreateUserResponse(logger kitlog.Logger) grpc.EncodeResponseFunc {
 	return func(_ context.Context, response interface{}) (interface{}, error) {
-		if resp, ok := response.(CreateUserResponse); !ok {
+		if resp, ok := response.(createUserResponse); !ok {
 			level.Error(logger).Log("error", fmt.Sprintf("response could not be parsed: %v", response))
 			return nil, status.Error(codes.FailedPrecondition, "response could not be parsed")
+		} else if resp.status != nil {
+			level.Error(logger).Log("error", resp.status)
+			return nil, status.Error(codes.Internal, "failed to create user")
 		} else {
 			level.Info(logger).Log("message", "response encoded")
 			return &pb.CreateUserResponse{

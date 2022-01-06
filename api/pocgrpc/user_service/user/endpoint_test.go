@@ -22,14 +22,14 @@ func Test_CreateUserEndpoint(t *testing.T) {
 		{
 			name: "Test user creation good request",
 			getRequest: func() interface{} {
-				return CreateUserRequest{
-					AuthToken: "Test token",
-					User:      NewUser("Test user", "Test password", 10, 0),
+				return createUserRequest{
+					authToken: "Test token",
+					user:      getNewUser(),
 				}
 			},
 			srvUser: getNewUser(),
 			checkResponse: func(response interface{}, err error, t *testing.T) {
-				if res, ok := response.(CreateUserResponse); !ok {
+				if res, ok := response.(createUserResponse); !ok {
 					t.Fatal(errors.New("response could not be parsed"))
 				} else {
 					assert.NoError(t, err)
@@ -60,15 +60,15 @@ func Test_CreateUserEndpoint(t *testing.T) {
 		{
 			name: "Test service error",
 			getRequest: func() interface{} {
-				return CreateUserRequest{
-					AuthToken: "Test token",
-					User:      NewUser("Test user", "Test password", 10, 0),
+				return createUserRequest{
+					authToken: "Test token",
+					user:      getNewUser(),
 				}
 			},
 			srvUser:       getNewUser(),
 			expectedError: errors.New("Some error"),
 			checkResponse: func(response interface{}, err error, t *testing.T) {
-				if res, ok := response.(CreateUserResponse); !ok {
+				if res, ok := response.(createUserResponse); !ok {
 					t.Fatal(errors.New("response could not be parsed"))
 				} else {
 					assert.Error(t, err)
@@ -79,15 +79,16 @@ func Test_CreateUserEndpoint(t *testing.T) {
 		},
 	}
 
+	ctx := context.Background()
+	var logger kitlog.Logger
+	{
+		logger = kitlog.NewLogfmtLogger(os.Stderr)
+		logger = kitlog.With(logger, "timestamp", kitlog.DefaultTimestampUTC)
+		logger = kitlog.With(logger, "caller", kitlog.DefaultCaller)
+	}
+
 	for _, tc := range TestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := context.Background()
-			var logger kitlog.Logger
-			{
-				logger = kitlog.NewLogfmtLogger(os.Stderr)
-				logger = kitlog.With(logger, "timestamp", kitlog.DefaultTimestampUTC)
-				logger = kitlog.With(logger, "caller", kitlog.DefaultCaller)
-			}
 
 			svr := new(mockService)
 
@@ -102,6 +103,62 @@ func Test_CreateUserEndpoint(t *testing.T) {
 	}
 }
 
-func getNewUser() User {
-	return NewUser("Test user", "Test password", 10, 0)
+func Test_GetUserEndpoint(t *testing.T) {
+	testCases := []struct {
+		name          string
+		getRequest    func() interface{}
+		checkResponse func(t *testing.T, response interface{}, expectedUser User, err error)
+		userId        int64
+		expectedUser  User
+		expectedError error
+	}{
+		{
+			name: "Test succsessful endpoint",
+			getRequest: func() interface{} {
+				return getUserRequest{
+					authToken: "Test Tokent",
+					id:        2,
+				}
+			},
+			userId: 2,
+			expectedUser: User{
+				Id:      2,
+				Name:    "Test User",
+				PwdHash: "Test Password",
+				Age:     20,
+			},
+			checkResponse: func(t *testing.T, response interface{}, expectedUser User, err error) {
+				if res, ok := response.(getUserResponse); !ok {
+					t.Fatal("response coul not be parsed")
+				} else {
+					assert.NoError(t, err)
+					assert.NoError(t, res.status)
+					assert.EqualValues(t, expectedUser, res.user)
+				}
+
+			},
+		},
+	}
+
+	ctx := context.Background()
+	var logger kitlog.Logger
+	{
+		logger = kitlog.NewLogfmtLogger(os.Stderr)
+		logger = kitlog.With(logger, "timestamp", kitlog.DefaultTimestampUTC)
+		logger = kitlog.With(logger, "caller", kitlog.DefaultCaller)
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			svc := new(mockService)
+
+			svc.On("GetUser", ctx, tc.userId).Return(tc.expectedUser, tc.expectedError)
+
+			endpoints := MakeEndpoints(svc, logger, nil)
+
+			response, err := endpoints.GetGetUser(ctx, tc.getRequest())
+
+			tc.checkResponse(t, response, tc.expectedUser, err)
+		})
+	}
 }

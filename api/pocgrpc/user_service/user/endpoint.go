@@ -9,48 +9,54 @@ import (
 	"github.com/go-kit/log/level"
 )
 
-type Service interface {
+type service interface {
 	CreateUser(ctx context.Context, user User) (int64, error)
+	GetUser(ctx context.Context, id int64) (User, error)
 }
 
 type Endpoints struct {
 	GetCreateUser endpoint.Endpoint
+	GetGetUser    endpoint.Endpoint
 }
 
-type CreateUserResponse struct {
-	Id int64
-}
-
-type CreateUserRequest struct {
-	AuthToken string
-	User      User
-}
-
-func MakeEndpoints(svc Service, logger kitlog.Logger, middlewares []endpoint.Middleware) Endpoints {
+func MakeEndpoints(svc service, logger kitlog.Logger, middlewares []endpoint.Middleware) Endpoints {
 	return Endpoints{
 		GetCreateUser: wrapEndpoint(makeGetCreateUserEndpoint(svc, logger), middlewares),
+		GetGetUser:    wrapEndpoint(makeGetGetUserEndpoint(svc, logger), middlewares),
 	}
 }
 
-func makeGetCreateUserEndpoint(svc Service, logger kitlog.Logger) endpoint.Endpoint {
+func makeGetCreateUserEndpoint(svc service, logger kitlog.Logger) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req, ok := request.(CreateUserRequest)
+		req, ok := request.(createUserRequest)
 
 		if !ok {
 			level.Error(logger).Log("message", "invalid request")
-			return CreateUserResponse{}, NewInvalidRequestError()
+			err := NewInvalidRequestError()
+			return createUserResponse{status: err}, err
 		}
 
-		id, err := svc.CreateUser(ctx, req.User)
+		id, err := svc.CreateUser(ctx, req.user)
 
 		if err != nil {
 			level.Error(logger).Log("message", "error creating user")
-			return CreateUserResponse{}, errors.New("error creating user")
+			return createUserResponse{status: err}, errors.New("error creating user")
 		}
 
-		return CreateUserResponse{
+		return createUserResponse{
 			Id: id,
 		}, nil
+	}
+}
+
+func makeGetGetUserEndpoint(svc service, logger kitlog.Logger) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(getUserRequest)
+		user, err := svc.GetUser(ctx, req.id)
+		return getUserResponse{
+			status: err,
+			user:   user,
+		}, err
 	}
 }
 

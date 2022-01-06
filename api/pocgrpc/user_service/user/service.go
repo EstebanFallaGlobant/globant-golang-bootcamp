@@ -10,14 +10,15 @@ import (
 
 type Repository interface {
 	InsertUser(user User) (int64, error)
+	GetUser(id int64) (User, error)
 }
-type service struct {
+type userInfoService struct {
 	repository Repository
 	log        log.Logger
 }
 
-func NewService(repo Repository, logger log.Logger) *service {
-	return &service{
+func NewService(repo Repository, logger log.Logger) *userInfoService {
+	return &userInfoService{
 		repository: repo,
 		log:        logger,
 	}
@@ -26,7 +27,7 @@ func NewService(repo Repository, logger log.Logger) *service {
 // Creates an user if the information provided is valid.
 //
 // The users name and password must not be empty strings.
-func (service *service) CreateUser(ctx context.Context, user User) (int64, error) {
+func (service *userInfoService) CreateUser(ctx context.Context, user User) (int64, error) {
 	var err error = nil
 	var params []string
 	var resId int64
@@ -38,20 +39,21 @@ func (service *service) CreateUser(ctx context.Context, user User) (int64, error
 		params = append(params, "password")
 	}
 
-	if id, v := int64(0), len(params) > 0; v { // If one or more parameters were empty, creates a single error for all of them
+	if v := len(params) > 0; v { // If one or more parameters were empty, creates a single error for all of them
 		err = NewArgumentsRequiredError(params...)
 	} else if age := user.Age; age < 1 || age > 150 {
 		err = NewInvalidArgumentsError("age", "between 1 and 150")
 	} else {
-		id, err = service.repository.InsertUser(
-			NewUser(
-				user.Name,
-				user.PwdHash,
-				user.Age,
-				user.Parent))
-
-		resId = id
+		resId, err = service.repository.InsertUser(user)
 	}
 
 	return resId, err
+}
+
+func (service *userInfoService) GetUser(ctx context.Context, id int64) (User, error) {
+	if id < 1 {
+		return User{}, NewInvalidArgumentsError("id", "must be 1 or greater")
+	} else {
+		return service.repository.GetUser(id)
+	}
 }
