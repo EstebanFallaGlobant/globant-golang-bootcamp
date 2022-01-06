@@ -17,8 +17,8 @@ type Transport struct {
 	logger log.Logger
 }
 
-func NewTransport(logger log.Logger) Transport {
-	return Transport{
+func NewTransport(logger log.Logger) *Transport {
+	return &Transport{
 		logger: logger,
 	}
 }
@@ -26,59 +26,71 @@ func NewTransport(logger log.Logger) Transport {
 func (trs *Transport) GetIsPalHandler(endpoint endpoint.Endpoint, options []httptransport.ServerOption) *httptransport.Server {
 	return httptransport.NewServer(
 		endpoint,
-		trs.decodeGetIsPalRequest,
-		trs.encodeGetIsPalResponse,
+		makeDecodeGetIsPalRequest(trs.logger),
+		makeEncodeGetIsPalResponse(trs.logger),
 		options...,
 	)
-}
-
-func (trs *Transport) decodeGetIsPalRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req models.IsPalRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
-	} else {
-		level.Info(trs.logger).Log("parsed request", req.Word)
-		return &req, nil
-	}
-}
-
-func (trs *Transport) encodeGetIsPalResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
-	resp, ok := response.(*models.IsPalResponse)
-
-	if !ok {
-		return errors.New("error decoding")
-	}
-
-	return json.NewEncoder(w).Encode(resp)
 }
 
 func (trs *Transport) GetReverseHandler(endpoint endpoint.Endpoint, options []httptransport.ServerOption) *httptransport.Server {
 	return httptransport.NewServer(
 		endpoint,
-		trs.decodeReverseRequest,
-		trs.encodeReverseResponse,
+		makeDecodeReverseRequest(trs.logger),
+		makeEncodeReverseResponse(trs.logger),
 		options...,
 	)
 }
 
-func (trs *Transport) decodeReverseRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req models.ReverseRequest
+func makeDecodeGetIsPalRequest(logger log.Logger) httptransport.DecodeRequestFunc {
+	return func(_ context.Context, r *http.Request) (interface{}, error) {
+		var req models.IsPalRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
-	} else {
-		level.Info(trs.logger).Log("parsed request", req.Word)
-		return &req, nil
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			return nil, err
+		} else {
+			level.Info(logger).Log("parsed request", req.Word)
+			return &req, nil
+		}
 	}
 }
 
-func (trs *Transport) encodeReverseResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
-	res, ok := response.(*models.ReverseResponse)
+func makeEncodeGetIsPalResponse(logger log.Logger) httptransport.EncodeResponseFunc {
+	return func(_ context.Context, w http.ResponseWriter, response interface{}) error {
+		resp, ok := response.(*models.IsPalResponse)
 
-	if !ok {
-		return errors.New("error decoding")
+		if !ok {
+			return errors.New("error decoding")
+		}
+
+		return json.NewEncoder(w).Encode(resp)
 	}
 
-	return json.NewEncoder(w).Encode(res)
+}
+
+func makeDecodeReverseRequest(logger log.Logger) httptransport.DecodeRequestFunc {
+	return func(_ context.Context, r *http.Request) (interface{}, error) {
+		var req models.ReverseRequest
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			level.Error(logger).Log("request couldn't be parsed", r.Body)
+			return nil, err
+		} else {
+			level.Info(logger).Log("parsed request", req.Word)
+			return &req, nil
+		}
+	}
+
+}
+
+func makeEncodeReverseResponse(logger log.Logger) httptransport.EncodeResponseFunc {
+	return func(_ context.Context, w http.ResponseWriter, response interface{}) error {
+		res, ok := response.(*models.ReverseResponse)
+
+		if !ok {
+			return errors.New("error decoding")
+		}
+
+		return json.NewEncoder(w).Encode(res)
+	}
+
 }

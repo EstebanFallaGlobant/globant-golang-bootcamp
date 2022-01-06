@@ -5,26 +5,30 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/grpcmicroservice/interfaces"
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/grpcmicroservice/models"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 )
 
+type ServiceInterface interface {
+	IsPal(string) string
+	Reverse(string) string
+}
+
 type Endpoints struct {
 	GetIsPalindrome endpoint.Endpoint
 	GetReverse      endpoint.Endpoint
 }
 
-func MakeEndpoints(svc interfaces.ServiceInterface, logger log.Logger, middlewares []endpoint.Middleware) Endpoints {
+func MakeEndpoints(svc ServiceInterface, logger log.Logger, middlewares []endpoint.Middleware) Endpoints {
 	return Endpoints{
 		GetIsPalindrome: wrapEndpoint(makeGetIsPalindromeEndpoint(svc, logger), middlewares),
 		GetReverse:      wrapEndpoint(makeGetReverseEndpoint(svc, logger), middlewares),
 	}
 }
 
-func makeGetIsPalindromeEndpoint(svc interfaces.ServiceInterface, logger log.Logger) endpoint.Endpoint {
+func makeGetIsPalindromeEndpoint(svc ServiceInterface, logger log.Logger) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(*models.IsPalRequest)
 
@@ -41,7 +45,7 @@ func makeGetIsPalindromeEndpoint(svc interfaces.ServiceInterface, logger log.Log
 	}
 }
 
-func makeGetReverseEndpoint(svc interfaces.ServiceInterface, logger log.Logger) endpoint.Endpoint {
+func makeGetReverseEndpoint(svc ServiceInterface, logger log.Logger) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		level.Info(logger).Log("mensaje", "entra a get reverse endpoint")
 		req, ok := request.(*models.ReverseRequest)

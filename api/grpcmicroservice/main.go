@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/grpcmicroservice/server"
-	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 	kitlog "github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -19,13 +18,11 @@ func main() {
 		logger = kitlog.With(logger, "ts", kitlog.DefaultTimestampUTC)
 		logger = kitlog.With(logger, "caller", kitlog.DefaultCaller)
 	}
-	var middlewares []endpoint.Middleware
 	var options []httptransport.ServerOption
 
 	svc := server.NewService(logger)
+	endpoints := server.MakeEndpoints(svc, logger, nil)
 	trs := server.NewTransport(logger)
-
-	endpoints := server.MakeEndpoints(svc, logger, middlewares)
 
 	router := mux.NewRouter()
 	router.Methods(http.MethodGet).Path("/palindrome").Handler(trs.GetIsPalHandler(endpoints.GetIsPalindrome, options))
