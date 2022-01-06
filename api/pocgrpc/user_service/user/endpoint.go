@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 	kitlog "github.com/go-kit/log"
@@ -51,12 +52,17 @@ func makeGetCreateUserEndpoint(svc service, logger kitlog.Logger) endpoint.Endpo
 
 func makeGetGetUserEndpoint(svc service, logger kitlog.Logger) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(getUserRequest)
-		user, err := svc.GetUser(ctx, req.id)
-		return getUserResponse{
-			status: err,
-			user:   user,
-		}, err
+		if req, ok := request.(getUserRequest); !ok {
+			err := NewInvalidRequestError()
+			level.Error(logger).Log(fmt.Sprintf("Invalid request with request: %v", request))
+			return getUserResponse{status: err}, err
+		} else {
+			user, err := svc.GetUser(ctx, req.id)
+			return getUserResponse{
+				status: err,
+				user:   user,
+			}, err
+		}
 	}
 }
 

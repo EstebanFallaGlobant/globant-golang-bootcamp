@@ -138,6 +138,50 @@ func Test_GetUserEndpoint(t *testing.T) {
 
 			},
 		},
+		{
+			name: "Test invalid request",
+			getRequest: func() interface{} {
+				request := struct {
+					authToken string
+					date      string
+				}{
+					authToken: "Test Tokent",
+					date:      "20-02-1998",
+				}
+				return request
+			},
+			checkResponse: func(t *testing.T, response interface{}, expectedUser User, err error) {
+				if res, ok := response.(getUserResponse); !ok {
+					t.Fatal("response could not be parsed")
+				} else {
+					assert.Error(t, err)
+					assert.Error(t, res.status)
+					assert.EqualValues(t, expectedUser, res.user)
+					assert.IsType(t, NewInvalidRequestError(), err)
+				}
+
+			},
+		},
+		{
+			name: "Test service error",
+			getRequest: func() interface{} {
+				return getUserRequest{
+					authToken: "Test Token",
+					id:        0,
+				}
+			},
+			expectedError: errors.New("Service error"),
+			checkResponse: func(t *testing.T, response interface{}, expectedUser User, err error) {
+				if res, ok := response.(getUserResponse); !ok {
+					t.Fatal("response could not be parsed")
+				} else {
+					assert.Error(t, err)
+					assert.Error(t, res.status)
+					assert.IsType(t, errors.New("Service error"), err)
+					assert.EqualValues(t, expectedUser, res.user)
+				}
+			},
+		},
 	}
 
 	ctx := context.Background()
