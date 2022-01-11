@@ -99,7 +99,7 @@ func Test_Repository_UserCreation(t *testing.T) {
 			sqlmock = tc.sqlResultData(sqlmock, tc.userInfo, tc.expectedId)
 
 			sqlErrorHandler := new(mockSQLErrorHandler)
-			sqlErrorHandler.On("CreateUserServiceError", mock.Anything).Return(errors.New("test error"))
+			sqlErrorHandler.On("CreateUserServiceError", mock.Anything, tc.userInfo).Return(errors.New("test error"))
 
 			mysqlrepo := NewsqlRepository(logger, db, sqlErrorHandler)
 
@@ -201,7 +201,7 @@ func Test_Repository_GetUser(t *testing.T) {
 			sqlMock = tc.configMock(sqlMock, tc.expectedUser.Id, tc.expectedUser)
 
 			sqlErrorHandler := new(mockSQLErrorHandler)
-			sqlErrorHandler.On("CreateUserServiceError", mock.Anything).Return(errors.New("test error"))
+			sqlErrorHandler.On("CreateUserServiceError", mock.Anything, tc.expectedUser).Return(errors.New("test error"))
 
 			repository := NewsqlRepository(logger, db, sqlErrorHandler)
 
