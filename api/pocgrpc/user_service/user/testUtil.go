@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/pb"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -38,12 +39,42 @@ func (connection *connectionMock) GetUser(id int64) (User, error) {
 	return args.Get(0).(User), args.Error(1)
 }
 
+type mockErrorHandler struct {
+	mock.Mock
+}
+
+func (mock *mockErrorHandler) TogRPCStatus(err error) error {
+	args := mock.Called(err)
+
+	return args.Error(0)
+}
+
+type mockSQLErrorHandler struct {
+	mock.Mock
+}
+
+func (mock mockSQLErrorHandler) CreateUserServiceError(err error, user User) error {
+	args := mock.Called(err, user)
+	return args.Error(0)
+}
+
 func getGenericRepositoryError() error {
 	return errors.New("generic repository error")
 }
 
-func getNewUser() User {
-	user, _ := NewUser("Test user", "Test password", 10, 0)
+func getNewUser(options ...InitializationOption) User {
+	user, _ := NewUser("Test user", "Test password", 10, 0, options...)
 
 	return user
+}
+
+func getNewgRPCUser() *pb.User {
+	user := getNewUser()
+
+	return &pb.User{
+		Name:    user.Name,
+		PwdHash: user.PwdHash,
+		Age:     uint32(user.Age),
+		Parent:  user.Parent,
+	}
 }

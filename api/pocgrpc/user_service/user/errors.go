@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/util"
 )
 
 type invalidArgumentsError struct {
@@ -17,6 +19,21 @@ type argumentsRequiredError struct {
 
 type invalidRequestError struct {
 	Err error
+}
+
+type userNotFoundError struct {
+	userName string
+	userId   int64
+}
+
+type userAlreadyExistsError struct {
+	userName string
+	userId   int64
+}
+
+type userNotUpdatedError struct {
+	userId  int64
+	message string
 }
 
 func NewInvalidArgumentsError(keyval ...string) *invalidArgumentsError {
@@ -40,28 +57,58 @@ func NewInvalidArgumentsError(keyval ...string) *invalidArgumentsError {
 	}
 }
 
-func NewArgumentsRequiredError(arguments ...string) *argumentsRequiredError {
-	return &argumentsRequiredError{
+func NewArgumentsRequiredError(arguments ...string) argumentsRequiredError {
+	return argumentsRequiredError{
 		Err: errors.New(getArgumentRequiredErrorMessage(arguments)),
 	}
 }
 
-func NewInvalidRequestError() *invalidRequestError {
-	return &invalidRequestError{
+func NewInvalidRequestError() invalidRequestError {
+	return invalidRequestError{
 		Err: errors.New("request is invalid"),
 	}
 }
 
-func (err *invalidArgumentsError) Error() string {
+func NewUserNotFoundError(name string, id int64) userNotFoundError {
+	return userNotFoundError{
+		userName: name,
+		userId:   id,
+	}
+}
+
+func NewUserAlreadyExistError(name string, id int64) userAlreadyExistsError {
+	return userAlreadyExistsError{
+		userName: name,
+		userId:   id,
+	}
+}
+
+func (err userAlreadyExistsError) Error() string {
+	return fmt.Sprintf("an user with the name \"%s\" was found with the id \"%d\"", err.userName, err.userId)
+}
+
+func (err userNotFoundError) Error() string {
+	if !util.IsEmptyString(err.userName) {
+		return fmt.Sprintf("user with name \"%s\" not found", err.userName)
+	} else {
+		return fmt.Sprintf("user with id %d not found", err.userId)
+	}
+}
+
+func (err invalidArgumentsError) Error() string {
 	return err.getInvalidArgumentsErrorMessage()
 }
 
-func (err *argumentsRequiredError) Error() string {
+func (err argumentsRequiredError) Error() string {
 	return fmt.Sprintf("%v", err.Err)
 }
 
-func (err *invalidRequestError) Error() string {
+func (err invalidRequestError) Error() string {
 	return fmt.Sprintf("%v", err.Err)
+}
+
+func (err userNotUpdatedError) Error() string {
+	return fmt.Sprintf("user: %d not updated with message: %s", err.userId, err.message)
 }
 
 func getArgumentRequiredErrorMessage(arguments []string) string {

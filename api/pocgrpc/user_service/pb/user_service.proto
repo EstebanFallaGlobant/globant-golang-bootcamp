@@ -6,6 +6,7 @@ option go_package = "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/
 
 service UserDetailService {
     rpc CreateUser (CreateUserRequest) returns (CreateUserResponse){}
+    rpc GetUser (GetUserRequest) returns (GetUserResponse){}
 }
 
 message User {
@@ -17,10 +18,19 @@ message User {
 }
 
 message CreateUserRequest{
-    string AuthToken = 1;
+    string authToken = 1;
     User user = 2;
 }
 
 message CreateUserResponse{
-    int64 Id = 1;
+    int64 id = 1;
+}
+
+message GetUserRequest{
+    string authToken = 1;
+    int64 id = 3;
+}
+
+message GetUserResponse {
+    User user = 1;
 }

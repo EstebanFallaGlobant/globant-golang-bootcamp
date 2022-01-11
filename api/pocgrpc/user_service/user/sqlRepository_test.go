@@ -10,6 +10,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	kitlog "github.com/go-kit/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 const (
@@ -34,7 +35,8 @@ func Test_Repository_UserCreation(t *testing.T) {
 				Parent:  0},
 			expectedId: 1,
 			sqlResultData: func(mock sqlmock.Sqlmock, user User, id int64) sqlmock.Sqlmock {
-				mock.ExpectExec(InsertUserQueryTest).
+				mock.ExpectPrepare(InsertUserQueryTest).
+					ExpectExec().
 					WithArgs(strings.ToLower(user.Name), user.PwdHash, int(user.Age), user.parent).
 					WillReturnResult(sqlmock.NewResult(id, 1))
 				return mock
@@ -61,7 +63,8 @@ func Test_Repository_UserCreation(t *testing.T) {
 				Parent:  0},
 			expectedId: 0,
 			sqlResultData: func(mock sqlmock.Sqlmock, user User, id int64) sqlmock.Sqlmock {
-				mock.ExpectExec(InsertUserQueryTest).
+				mock.ExpectPrepare(InsertUserQueryTest).
+					ExpectExec().
 					WithArgs(strings.ToLower(user.Name), user.PwdHash, int(user.Age), user.parent).
 					WillReturnError(errors.New("some sql error"))
 				return mock
@@ -91,17 +94,19 @@ func Test_Repository_UserCreation(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 
-			db, mock, err := sqlmock.New()
-
+			db, sqlmock, err := sqlmock.New()
 			assert.NoError(t, err)
-			mock = tc.sqlResultData(mock, tc.userInfo, tc.expectedId)
+			sqlmock = tc.sqlResultData(sqlmock, tc.userInfo, tc.expectedId)
 
-			mysqlrepo := NewsqlRepository(logger, db)
+			sqlErrorHandler := new(mockSQLErrorHandler)
+			sqlErrorHandler.On("CreateUserServiceError", mock.Anything).Return(errors.New("test error"))
+
+			mysqlrepo := NewsqlRepository(logger, db, sqlErrorHandler)
 
 			var id int64
 			id, err = mysqlrepo.InsertUser(tc.userInfo)
 
-			assert.NoError(t, mock.ExpectationsWereMet())
+			assert.NoError(t, sqlmock.ExpectationsWereMet())
 			tc.checkResult(t, id, tc.expectedId, err)
 		})
 	}
@@ -124,7 +129,8 @@ func Test_Repository_GetUser(t *testing.T) {
 				Parent:  0,
 				parent:  sql.NullInt64{Int64: 0, Valid: false}},
 			configMock: func(mock sqlmock.Sqlmock, id int64, resultUser User) sqlmock.Sqlmock {
-				mock.ExpectQuery(GetUserQueryTest).
+				mock.ExpectPrepare(GetUserQueryTest).
+					ExpectQuery().
 					WithArgs(id).
 					WillReturnRows(
 						sqlmock.NewRows([]string{"id", "pwd_hash", "name", "age", "parent_id"}).
@@ -147,7 +153,8 @@ func Test_Repository_GetUser(t *testing.T) {
 				Parent:  1,
 				parent:  sql.NullInt64{Int64: 1, Valid: true}},
 			configMock: func(mock sqlmock.Sqlmock, id int64, resultUser User) sqlmock.Sqlmock {
-				mock.ExpectQuery(GetUserQueryTest).
+				mock.ExpectPrepare(GetUserQueryTest).
+					ExpectQuery().
 					WithArgs(id).
 					WillReturnRows(
 						sqlmock.NewRows([]string{"id", "pwd_hash", "name", "age", "parent_id"}).
@@ -164,14 +171,15 @@ func Test_Repository_GetUser(t *testing.T) {
 			name:         "Test invalid query",
 			expectedUser: User{},
 			configMock: func(mock sqlmock.Sqlmock, id int64, resultUser User) sqlmock.Sqlmock {
-				mock.ExpectQuery(GetUserQueryTest).
+				mock.ExpectPrepare(GetUserQueryTest).
+					ExpectQuery().
 					WithArgs(id).
 					WillReturnError(sql.ErrNoRows)
 				return mock
 			},
 			checkResult: func(t *testing.T, expectedUser, resultUser User, resultError error) {
 				assert.Error(t, resultError)
-				assert.IsType(t, sql.ErrNoRows, resultError)
+				assert.IsType(t, errors.New("test error"), resultError)
 				assert.EqualValues(t, expectedUser, resultUser)
 			},
 		},
@@ -186,18 +194,20 @@ func Test_Repository_GetUser(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			db, mock, err := sqlmock.New()
-
+			db, sqlMock, err := sqlmock.New()
 			if err != nil {
 				t.Fatal(err)
 			}
+			sqlMock = tc.configMock(sqlMock, tc.expectedUser.Id, tc.expectedUser)
 
-			mock = tc.configMock(mock, tc.expectedUser.Id, tc.expectedUser)
-			repository := NewsqlRepository(logger, db)
+			sqlErrorHandler := new(mockSQLErrorHandler)
+			sqlErrorHandler.On("CreateUserServiceError", mock.Anything).Return(errors.New("test error"))
+
+			repository := NewsqlRepository(logger, db, sqlErrorHandler)
 
 			user, err := repository.GetUser(tc.expectedUser.Id)
 
-			assert.NoError(t, mock.ExpectationsWereMet())
+			assert.NoError(t, sqlMock.ExpectationsWereMet())
 			tc.checkResult(t, tc.expectedUser, user, err)
 		})
 	}
