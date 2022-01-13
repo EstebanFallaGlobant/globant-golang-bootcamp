@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/entities"
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/pb"
 	kitlog "github.com/go-kit/log"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +19,7 @@ func Test_CreateUserTransport(t *testing.T) {
 	testCases := []struct {
 		name          string
 		createRequest func() *pb.CreateUserRequest
-		createSvcUser func(...InitializationOption) User
+		createSvcUser func(...entities.InitializationOption) entities.User
 		checkResponse func(t *testing.T, response interface{}, err error)
 		svcId         int
 		svcError      error
@@ -91,17 +92,17 @@ func Test_GetUserTransport(t *testing.T) {
 	testCases := []struct {
 		name          string
 		userId        int64
-		svcUser       User
+		svcUser       entities.User
 		svcError      error
-		checkResponse func(t *testing.T, expectedUser User, response interface{}, err error)
+		checkResponse func(t *testing.T, expectedUser entities.User, response interface{}, err error)
 		getRequest    func() *pb.GetUserRequest
 		handlerError  error
 	}{
 		{
 			name:   "Tests successful request",
 			userId: 2,
-			svcUser: getNewUser(func(user *User) error {
-				user.Id = 2
+			svcUser: getNewUser(func(user *entities.User) error {
+				user.ID = 2
 				return nil
 			}),
 			getRequest: func() *pb.GetUserRequest {
@@ -110,23 +111,23 @@ func Test_GetUserTransport(t *testing.T) {
 					Id:        2,
 				}
 			},
-			checkResponse: func(t *testing.T, expectedUser User, response interface{}, err error) {
+			checkResponse: func(t *testing.T, expectedUser entities.User, response interface{}, err error) {
 				if resp, ok := response.(*pb.GetUserResponse); !ok {
 					t.Fatalf("Failed to parse response: %v", response)
 				} else {
 					assert.NoError(t, err)
-					assert.EqualValues(t, expectedUser.Id, resp.User.Id)
+					assert.EqualValues(t, expectedUser.ID, resp.User.Id)
 					assert.EqualValues(t, expectedUser.Name, resp.User.Name)
 					assert.EqualValues(t, expectedUser.PwdHash, resp.User.PwdHash)
 					assert.EqualValues(t, expectedUser.Age, resp.User.Age)
-					assert.EqualValues(t, expectedUser.Parent, resp.User.Parent)
+					assert.EqualValues(t, expectedUser.ParentID, resp.User.Parent)
 				}
 			},
 		},
 		{
 			name:         "Test service error",
 			userId:       999,
-			svcUser:      User{},
+			svcUser:      entities.User{},
 			svcError:     errors.New("Service error"),
 			handlerError: status.Error(codes.Unavailable, "test error"),
 			getRequest: func() *pb.GetUserRequest {
@@ -135,7 +136,7 @@ func Test_GetUserTransport(t *testing.T) {
 					Id:        999,
 				}
 			},
-			checkResponse: func(t *testing.T, expectedUser User, response interface{}, err error) {
+			checkResponse: func(t *testing.T, expectedUser entities.User, response interface{}, err error) {
 				assert.Error(t, err)
 				assert.Nil(t, response)
 			},

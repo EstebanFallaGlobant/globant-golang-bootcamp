@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/entities"
+	svcerr "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/error"
 	kitlog "github.com/go-kit/log"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,101 +14,100 @@ import (
 func Test_Service_CreateUser(t *testing.T) {
 	testCases := []struct {
 		name          string
-		userData      User
+		userData      entities.User
 		expectedId    int64
 		expectedError error
+		configMock    func(mock *connectionMock, returnError error, user entities.User, returnID int64)
 		checkResult   func(t *testing.T, expected, response int64, err error)
 	}{
 		{
 			name: "Test user creation successful",
-			userData: User{
-				Name:    "Test User",
-				PwdHash: "7bcf9d89298f1bfae16fa02ed6b61908fd2fa8de45dd8e2153a3c47300765328",
-				Age:     uint8(34),
-				Parent:  0},
+			userData: entities.User{
+				Name:     "Test User",
+				PwdHash:  "7bcf9d89298f1bfae16fa02ed6b61908fd2fa8de45dd8e2153a3c47300765328",
+				Age:      uint8(34),
+				ParentID: 0},
 			expectedId:    1,
 			expectedError: nil,
+			configMock: func(mock *connectionMock, returnError error, user entities.User, returnID int64) {
+				mock.On(
+					"InsertUser",
+					user.Name,
+					user.PwdHash,
+					user.Age,
+					user.ParentID).
+					Return(
+						int(returnID),
+						returnError)
+
+				mock.On(
+					"GetUserByName",
+					user.Name).
+					Return(
+						entities.User{},
+						nil)
+			},
 			checkResult: func(t *testing.T, expected, response int64, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, expected, response)
 			},
 		},
 		{
-			name: "Test user creation with empty user name",
-			userData: User{
-				Name:    " ",
-				PwdHash: "7bcf9d89298f1bfae16fa02ed6b61908fd2fa8de45dd8e2153a3c47300765328",
-				Age:     uint8(20),
-				Parent:  0},
-			expectedError: nil,
-			checkResult: func(t *testing.T, expected, response int64, err error) {
-				assert.Error(t, err)
-				assert.IsType(t, err, NewArgumentsRequiredError("name"))
-			},
-		},
-		{
-			name: "Test user creation with empty password",
-			userData: User{
-				Name:    "Test user",
-				PwdHash: " ",
-				Age:     uint8(20),
-				Parent:  0},
-			expectedError: nil,
-			checkResult: func(t *testing.T, expected, response int64, err error) {
-				assert.Error(t, err)
-				assert.IsType(t, err, NewArgumentsRequiredError("password"))
-			},
-		},
-		{
-			name: "Test user creation with empty user name and password",
-			userData: User{
-				Name:    " ",
-				PwdHash: " ",
-				Age:     uint8(20),
-				Parent:  0},
-			expectedError: nil,
-			checkResult: func(t *testing.T, expected, response int64, err error) {
-				assert.Error(t, err)
-				assert.EqualValues(t, err.Error(), NewArgumentsRequiredError("name", "password").Error())
-			},
-		},
-		{
-			name: "Test user creation with age 0",
-			userData: User{
-				Name:    "Test user",
-				PwdHash: "7bcf9d89298f1bfae16fa02ed6b61908fd2fa8de45dd8e2153a3c47300765328",
-				Age:     uint8(0),
-				Parent:  0},
-			expectedError: nil,
-			checkResult: func(t *testing.T, expected, response int64, err error) {
-				assert.Error(t, err)
-				assert.IsType(t, NewInvalidArgumentsError("age", "between 1 and 150"), err)
-			},
-		},
-		{
-			name: "Test user creation with age 151",
-			userData: User{
-				Name:    "Test user",
-				PwdHash: "7bcf9d89298f1bfae16fa02ed6b61908fd2fa8de45dd8e2153a3c47300765328",
-				Age:     uint8(151),
-				Parent:  0},
-			expectedError: nil,
-			checkResult: func(t *testing.T, expected, response int64, err error) {
-				assert.Error(t, err)
-				assert.IsType(t, NewInvalidArgumentsError("age", "between 1 and 150"), err)
-			},
-		},
-		{
 			name: "Test user creation failed by repository message",
-			userData: User{
-				Name:    "Test user",
-				PwdHash: "7bcf9d89298f1bfae16fa02ed6b61908fd2fa8de45dd8e2153a3c47300765328",
-				Age:     uint8(25),
-				Parent:  0},
+			userData: entities.User{
+				Name:     "Test user",
+				PwdHash:  "7bcf9d89298f1bfae16fa02ed6b61908fd2fa8de45dd8e2153a3c47300765328",
+				Age:      uint8(25),
+				ParentID: 0},
 			expectedError: getGenericRepositoryError(),
+			configMock: func(mock *connectionMock, returnError error, user entities.User, returnID int64) {
+				mock.On(
+					"InsertUser",
+					user.Name,
+					user.PwdHash,
+					user.Age,
+					user.ParentID).
+					Return(
+						int(returnID),
+						returnError)
+
+				mock.On(
+					"GetUserByName",
+					user.Name).
+					Return(
+						entities.User{},
+						nil)
+			},
 			checkResult: func(t *testing.T, expected, response int64, err error) {
 				assert.Error(t, err)
 				assert.IsType(t, getGenericRepositoryError(), err)
+			},
+		},
+		{
+			name: "Test user creation failed due to user already existing",
+			userData: entities.User{
+				Name:    "Test user",
+				PwdHash: "7bcf9d89298f1bfae16fa02ed6b61908fd2fa8de45dd8e2153a3c47300765328",
+				Age:     20,
+			},
+			expectedError: getGenericRepositoryError(),
+			configMock: func(mock *connectionMock, returnError error, user entities.User, returnID int64) {
+				returnUser := user
+				{
+					returnUser.ID = 1
+				}
+
+				mock.On(
+					"GetUserByName",
+					user.Name).
+					Return(
+						returnUser,
+						nil)
+			},
+			checkResult: func(t *testing.T, expected, response int64, err error) {
+				expectedError := svcerr.NewUserAlreadyExistError("Test user", 1)
+				assert.Error(t, err)
+				assert.ErrorAs(t, err, &expectedError)
 			},
 		},
 	}
@@ -124,15 +125,7 @@ func Test_Service_CreateUser(t *testing.T) {
 
 			repo := new(connectionMock)
 
-			repo.On(
-				"InsertUser",
-				tc.userData.Name,
-				tc.userData.PwdHash,
-				tc.userData.Age,
-				tc.userData.Parent).
-				Return(
-					int(tc.expectedId),
-					tc.expectedError)
+			tc.configMock(repo, tc.expectedError, tc.userData, tc.expectedId)
 
 			service := NewService(repo, logger)
 
@@ -147,20 +140,20 @@ func Test_GetUser(t *testing.T) {
 	testCases := []struct {
 		name            string
 		searchId        int64
-		expectedUser    User
+		expectedUser    entities.User
 		repositoryError error
-		checkResult     func(t *testing.T, expected, response User, err error)
+		checkResult     func(t *testing.T, expected, response entities.User, err error)
 	}{
 		{
 			name:     "Test successfully retrieved user",
 			searchId: 3,
-			expectedUser: User{
-				Id:      3,
+			expectedUser: entities.User{
+				ID:      3,
 				Name:    "Test User",
 				PwdHash: "Test Password",
 				Age:     uint8(25),
 			},
-			checkResult: func(t *testing.T, expected, response User, err error) {
+			checkResult: func(t *testing.T, expected, response entities.User, err error) {
 				assert.NoError(t, err)
 				assert.EqualValues(t, expected, response)
 			},
@@ -168,19 +161,19 @@ func Test_GetUser(t *testing.T) {
 		{
 			name:         "Test user retrieve failed with id 0",
 			searchId:     0,
-			expectedUser: User{},
-			checkResult: func(t *testing.T, expected, response User, err error) {
+			expectedUser: entities.User{},
+			checkResult: func(t *testing.T, expected, response entities.User, err error) {
 				assert.Error(t, err)
-				assert.IsType(t, NewInvalidArgumentsError("id", "must be 1 or greater"), err)
+				assert.IsType(t, svcerr.NewInvalidArgumentsError("ID", "must be 1 or greater"), err)
 				assert.EqualValues(t, expected, response)
 			},
 		},
 		{
 			name:            "Test user retrieve failed, error on repository",
 			searchId:        999,
-			expectedUser:    User{},
+			expectedUser:    entities.User{},
 			repositoryError: getGenericRepositoryError(),
-			checkResult: func(t *testing.T, expected, response User, err error) {
+			checkResult: func(t *testing.T, expected, response entities.User, err error) {
 				assert.Error(t, err)
 				assert.EqualValues(t, expected, response)
 			},

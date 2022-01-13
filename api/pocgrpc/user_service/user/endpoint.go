@@ -2,17 +2,18 @@ package user
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/entities"
+	svcerr "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/error"
 	"github.com/go-kit/kit/endpoint"
 	kitlog "github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 )
 
 type service interface {
-	CreateUser(ctx context.Context, user User) (int64, error)
-	GetUser(ctx context.Context, id int64) (User, error)
+	CreateUser(ctx context.Context, user entities.User) (int64, error)
+	GetUser(ctx context.Context, id int64) (entities.User, error)
 }
 
 type Endpoints struct {
@@ -33,7 +34,15 @@ func makeGetCreateUserEndpoint(svc service, logger kitlog.Logger) endpoint.Endpo
 
 		if !ok {
 			level.Error(logger).Log("message", "invalid request")
-			err := NewInvalidRequestError()
+			err := svcerr.NewInvalidRequestError("request could not be parsed")
+			return createUserResponse{status: err}, err
+		}
+
+		if err := req.Validate(); err != nil {
+			level.Error(logger).Log("error in user", err)
+
+			err = svcerr.NewInvalidRequestError(err.Error())
+
 			return createUserResponse{status: err}, err
 		}
 
@@ -41,7 +50,7 @@ func makeGetCreateUserEndpoint(svc service, logger kitlog.Logger) endpoint.Endpo
 
 		if err != nil {
 			level.Error(logger).Log("message", "error creating user")
-			return createUserResponse{status: err}, errors.New("error creating user")
+			return createUserResponse{status: err}, err
 		}
 
 		return createUserResponse{
@@ -52,17 +61,28 @@ func makeGetCreateUserEndpoint(svc service, logger kitlog.Logger) endpoint.Endpo
 
 func makeGetGetUserEndpoint(svc service, logger kitlog.Logger) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		if req, ok := request.(getUserRequest); !ok {
-			err := NewInvalidRequestError()
-			level.Error(logger).Log(fmt.Sprintf("Invalid request with request: %v", request))
+		req, ok := request.(getUserRequest)
+
+		if !ok {
+			level.Error(logger).Log(fmt.Sprintf("invalid request: %v", request))
+			err := svcerr.NewInvalidRequestError("request could not be parsed")
 			return getUserResponse{status: err}, err
-		} else {
-			user, err := svc.GetUser(ctx, req.id)
-			return getUserResponse{
-				status: err,
-				user:   user,
-			}, err
 		}
+
+		if err := req.Validate(); err != nil {
+			level.Error(logger).Log("invalid request", err)
+
+			err := svcerr.NewInvalidRequestError(err.Error())
+
+			return getUserResponse{status: err}, err
+		}
+
+		user, err := svc.GetUser(ctx, req.id)
+		return getUserResponse{
+			status: err,
+			user:   user,
+		}, err
+
 	}
 }
 

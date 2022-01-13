@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	svcerr "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/error"
 	kitlog "github.com/go-kit/log"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -24,35 +25,32 @@ func Test_TogRPCError(t *testing.T) {
 		},
 		{
 			name:          "Test invalid request error",
-			sentError:     NewInvalidRequestError(),
+			sentError:     svcerr.NewInvalidRequestError(""),
 			expectedError: status.Error(codes.InvalidArgument, "request is invalid"),
 		},
 		{
 			name:          "Test invalid argument error",
-			sentError:     NewInvalidArgumentsError("test argument", "test rule"),
+			sentError:     svcerr.NewInvalidArgumentsError("test argument", "test rule"),
 			expectedError: status.Error(codes.InvalidArgument, ""),
 		},
 		{
 			name:          "Test required argument error",
-			sentError:     NewArgumentsRequiredError("Test argument"),
+			sentError:     svcerr.NewArgumentsRequiredError("Test argument"),
 			expectedError: status.Error(codes.InvalidArgument, ""),
 		},
 		{
 			name:          "Test user nor found error",
-			sentError:     NewUserNotFoundError("Test user", 1),
+			sentError:     svcerr.NewUserNotFoundError("Test user", 1),
 			expectedError: status.Error(codes.NotFound, ""),
 		},
 		{
 			name:          "Test user already exists error",
-			sentError:     NewUserAlreadyExistError("Test user", 1),
+			sentError:     svcerr.NewUserAlreadyExistError("Test user", 1),
 			expectedError: status.Error(codes.AlreadyExists, ""),
 		},
 		{
-			name: "Test user not updated error",
-			sentError: userNotUpdatedError{
-				userId:  100,
-				message: "not updated ",
-			},
+			name:          "Test user not updated error",
+			sentError:     svcerr.NewUserNotUpdatedError(10, "user not updated"),
 			expectedError: status.Error(codes.Unavailable, ""),
 		},
 	}
@@ -66,8 +64,8 @@ func Test_TogRPCError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			errorHandler := userServiceErrorHandler{
-				logger: logger,
+			errorHandler := UserServiceErrorHandler{
+				Logger: logger,
 			}
 
 			err := errorHandler.TogRPCStatus(tc.sentError)
