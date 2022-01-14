@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func Test_CreateUserTransport(t *testing.T) {
@@ -23,7 +22,7 @@ func Test_CreateUserTransport(t *testing.T) {
 		checkResponse func(t *testing.T, response interface{}, err error)
 		svcId         int
 		svcError      error
-		handlerError  error
+		handlerError  *pb.Err
 	}{
 		{
 			name:          "Test successful response",
@@ -36,19 +35,23 @@ func Test_CreateUserTransport(t *testing.T) {
 				}
 			},
 			checkResponse: func(t *testing.T, response interface{}, err error) {
-				if resp, ok := response.(*pb.CreateUserResponse); !ok {
+				resp, ok := response.(*pb.CreateUserResponse)
+
+				if !ok {
 					t.Fatal("Response couln't be parsed")
-				} else {
-					assert.NoError(t, err)
-					assert.EqualValues(t, 1, resp.GetId())
 				}
+				assert.NoError(t, err)
+				assert.EqualValues(t, 1, resp.GetId())
+
 			},
 		},
 		{
-			name:          "Test with error from service",
-			svcId:         0,
-			svcError:      errors.New("Some service error"),
-			handlerError:  status.Error(codes.Unavailable, "test error"),
+			name:     "Test with error from service",
+			svcId:    0,
+			svcError: errors.New("Some service error"),
+			handlerError: &pb.Err{
+				Code: uint32(codes.Unavailable),
+			},
 			createSvcUser: getNewUser,
 			createRequest: func() *pb.CreateUserRequest {
 				return &pb.CreateUserRequest{
@@ -57,8 +60,15 @@ func Test_CreateUserTransport(t *testing.T) {
 				}
 			},
 			checkResponse: func(t *testing.T, response interface{}, err error) {
+				resp, ok := response.(*pb.CreateUserResponse)
+
+				if !ok {
+					t.Fatal("Response couln't be parsed")
+				}
+
 				assert.Error(t, err)
-				assert.Nil(t, response)
+				assert.NotEqualValues(t, codes.OK, resp.Status.Code)
+				assert.Zero(t, resp.Id)
 			},
 		},
 	}
@@ -96,7 +106,7 @@ func Test_GetUserTransport(t *testing.T) {
 		svcError      error
 		checkResponse func(t *testing.T, expectedUser entities.User, response interface{}, err error)
 		getRequest    func() *pb.GetUserRequest
-		handlerError  error
+		handlerError  *pb.Err
 	}{
 		{
 			name:   "Tests successful request",
@@ -112,24 +122,29 @@ func Test_GetUserTransport(t *testing.T) {
 				}
 			},
 			checkResponse: func(t *testing.T, expectedUser entities.User, response interface{}, err error) {
-				if resp, ok := response.(*pb.GetUserResponse); !ok {
+				resp, ok := response.(*pb.GetUserResponse)
+
+				if !ok {
 					t.Fatalf("Failed to parse response: %v", response)
-				} else {
-					assert.NoError(t, err)
-					assert.EqualValues(t, expectedUser.ID, resp.User.Id)
-					assert.EqualValues(t, expectedUser.Name, resp.User.Name)
-					assert.EqualValues(t, expectedUser.PwdHash, resp.User.PwdHash)
-					assert.EqualValues(t, expectedUser.Age, resp.User.Age)
-					assert.EqualValues(t, expectedUser.ParentID, resp.User.Parent)
 				}
+
+				assert.NoError(t, err)
+				assert.EqualValues(t, codes.OK, resp.Status.Code)
+				assert.EqualValues(t, expectedUser.ID, resp.User.Id)
+				assert.EqualValues(t, expectedUser.Name, resp.User.Name)
+				assert.EqualValues(t, expectedUser.PwdHash, resp.User.PwdHash)
+				assert.EqualValues(t, expectedUser.Age, resp.User.Age)
+				assert.EqualValues(t, expectedUser.ParentID, resp.User.ParentId)
 			},
 		},
 		{
-			name:         "Test service error",
-			userId:       999,
-			svcUser:      entities.User{},
-			svcError:     errors.New("Service error"),
-			handlerError: status.Error(codes.Unavailable, "test error"),
+			name:     "Test service error",
+			userId:   999,
+			svcUser:  entities.User{},
+			svcError: errors.New("Service error"),
+			handlerError: &pb.Err{
+				Code: uint32(codes.Unavailable),
+			},
 			getRequest: func() *pb.GetUserRequest {
 				return &pb.GetUserRequest{
 					AuthToken: "Test Token",
@@ -137,8 +152,14 @@ func Test_GetUserTransport(t *testing.T) {
 				}
 			},
 			checkResponse: func(t *testing.T, expectedUser entities.User, response interface{}, err error) {
+				resp, ok := response.(*pb.GetUserResponse)
+
+				if !ok {
+					t.Fatalf("Failed to parse response: %v", response)
+				}
+
 				assert.Error(t, err)
-				assert.Nil(t, response)
+				assert.NotEqualValues(t, codes.OK, resp.Status.Code)
 			},
 		},
 	}

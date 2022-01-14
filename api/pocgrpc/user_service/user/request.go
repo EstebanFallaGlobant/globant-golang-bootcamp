@@ -16,6 +16,10 @@ type getUserRequest struct {
 }
 
 func (req createUserRequest) Validate() error {
+	if req.user.ID != 0 {
+		return svcerr.NewInvalidArgumentsError("ID", "must be 0")
+	}
+
 	return req.user.Validate()
 }
 

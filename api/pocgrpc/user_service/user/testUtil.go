@@ -49,10 +49,10 @@ type mockErrorHandler struct {
 	mock.Mock
 }
 
-func (mock *mockErrorHandler) TogRPCStatus(err error) error {
+func (mock *mockErrorHandler) TogRPCStatus(err error) *pb.Err {
 	args := mock.Called(err)
 
-	return args.Error(0)
+	return args.Get(0).(*pb.Err)
 }
 
 func getGenericRepositoryError() error {
@@ -69,9 +69,9 @@ func getNewgRPCUser() *pb.User {
 	user := getNewUser()
 
 	return &pb.User{
-		Name:    user.Name,
-		PwdHash: user.PwdHash,
-		Age:     uint32(user.Age),
-		Parent:  user.ParentID,
+		Name:     user.Name,
+		PwdHash:  user.PwdHash,
+		Age:      uint32(user.Age),
+		ParentId: user.ParentID,
 	}
 }

@@ -9,12 +9,17 @@ service UserDetailService {
     rpc GetUser (GetUserRequest) returns (GetUserResponse){}
 }
 
+message Err {
+    uint32 code = 1;
+    string errMsg = 3;
+}
+
 message User {
-    int64 Id = 1;
-    string Name = 2;
-    string PwdHash = 3;
-    uint32 Age = 4;
-    int64 Parent = 5;
+    int64 id = 1;
+    string name = 2;
+    string pwdHash = 3;
+    uint32 age = 4;
+    int64 parentId = 5;
 }
 
 message CreateUserRequest{
@@ -24,6 +29,7 @@ message CreateUserRequest{
 
 message CreateUserResponse{
     int64 id = 1;
+    Err status = 3;
 }
 
 message GetUserRequest{
@@ -33,4 +39,5 @@ message GetUserRequest{
 
 message GetUserResponse {
     User user = 1;
+    Err status = 3;
 }

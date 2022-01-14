@@ -9,49 +9,48 @@ import (
 	kitlog "github.com/go-kit/log"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func Test_TogRPCError(t *testing.T) {
 	testCases := []struct {
-		name          string
-		sentError     error
-		expectedError error
+		name              string
+		sentError         error
+		expectedErrorCode uint32
 	}{
 		{
-			name:          "Test generic error",
-			sentError:     errors.New("Test error"),
-			expectedError: status.Error(codes.Unavailable, ""),
+			name:              "Test generic error",
+			sentError:         errors.New("Test error"),
+			expectedErrorCode: uint32(codes.Unavailable),
 		},
 		{
-			name:          "Test invalid request error",
-			sentError:     svcerr.NewInvalidRequestError(""),
-			expectedError: status.Error(codes.InvalidArgument, "request is invalid"),
+			name:              "Test invalid request error",
+			sentError:         svcerr.NewInvalidRequestError(""),
+			expectedErrorCode: uint32(codes.InvalidArgument),
 		},
 		{
-			name:          "Test invalid argument error",
-			sentError:     svcerr.NewInvalidArgumentsError("test argument", "test rule"),
-			expectedError: status.Error(codes.InvalidArgument, ""),
+			name:              "Test invalid argument error",
+			sentError:         svcerr.NewInvalidArgumentsError("test argument", "test rule"),
+			expectedErrorCode: uint32(codes.InvalidArgument),
 		},
 		{
-			name:          "Test required argument error",
-			sentError:     svcerr.NewArgumentsRequiredError("Test argument"),
-			expectedError: status.Error(codes.InvalidArgument, ""),
+			name:              "Test required argument error",
+			sentError:         svcerr.NewArgumentsRequiredError("Test argument"),
+			expectedErrorCode: uint32(codes.InvalidArgument),
 		},
 		{
-			name:          "Test user nor found error",
-			sentError:     svcerr.NewUserNotFoundError("Test user", 1),
-			expectedError: status.Error(codes.NotFound, ""),
+			name:              "Test user nor found error",
+			sentError:         svcerr.NewUserNotFoundError("Test user", 1),
+			expectedErrorCode: uint32(codes.NotFound),
 		},
 		{
-			name:          "Test user already exists error",
-			sentError:     svcerr.NewUserAlreadyExistError("Test user", 1),
-			expectedError: status.Error(codes.AlreadyExists, ""),
+			name:              "Test user already exists error",
+			sentError:         svcerr.NewUserAlreadyExistError("Test user", 1),
+			expectedErrorCode: uint32(codes.AlreadyExists),
 		},
 		{
-			name:          "Test user not updated error",
-			sentError:     svcerr.NewUserNotUpdatedError(10, "user not updated"),
-			expectedError: status.Error(codes.Unavailable, ""),
+			name:              "Test user not updated error",
+			sentError:         svcerr.NewUserNotUpdatedError(10, "user not updated"),
+			expectedErrorCode: uint32(codes.Unavailable),
 		},
 	}
 
@@ -70,7 +69,7 @@ func Test_TogRPCError(t *testing.T) {
 
 			err := errorHandler.TogRPCStatus(tc.sentError)
 
-			assert.ErrorAs(t, err, &tc.expectedError)
+			assert.EqualValues(t, tc.expectedErrorCode, err.Code)
 		})
 	}
 }
