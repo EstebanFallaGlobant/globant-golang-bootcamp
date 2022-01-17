@@ -2,6 +2,11 @@
 # Services
 ## User data service
 Manages the creation, authentication and basic information of users
+### Envoreontment variables
+- udsConnStr: onnection string used to connect with a mysql database, must be in format: `[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]` 
+
+    More examples of valid format found in: https://github.com/go-sql-driver/mysql
+- udsListenAddr: address in which the service will be listening
 ### Exposed methods
 - CreateUser
 - GetUser

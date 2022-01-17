@@ -51,6 +51,7 @@ func NewInvalidArgumentsError(keyval ...string) InvalidArgumentsError {
 
 		args[key] = value
 	}
+
 	return InvalidArgumentsError{
 		err:       errors.New("invalid arguments"),
 		arguments: args,
@@ -97,9 +98,9 @@ func (err UserAlreadyExistsError) Error() string {
 func (err UserNotFoundError) Error() string {
 	if !util.IsEmptyString(err.userName) {
 		return fmt.Sprintf("user with name \"%s\" not found", err.userName)
-	} else {
-		return fmt.Sprintf("user with id %d not found", err.userId)
 	}
+
+	return fmt.Sprintf("user with id %d not found", err.userId)
 }
 
 func (err InvalidArgumentsError) Error() string {
@@ -121,9 +122,9 @@ func (err UserNotUpdatedError) Error() string {
 func getArgumentRequiredErrorMessage(arguments []string) string {
 	if len(arguments) > 1 {
 		return strings.Join(arguments, ", ") + " are required"
-	} else {
-		return arguments[0] + " is required"
 	}
+	return arguments[0] + " is required"
+
 }
 
 func (err *InvalidArgumentsError) getInvalidArgumentsErrorMessage() string {

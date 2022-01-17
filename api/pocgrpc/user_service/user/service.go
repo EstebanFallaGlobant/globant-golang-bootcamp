@@ -40,7 +40,7 @@ func (svc *userInfoService) CreateUser(ctx context.Context, user entities.User) 
 
 func (svc *userInfoService) GetUser(ctx context.Context, id int64) (entities.User, error) {
 	if id < 1 {
-		return entities.User{}, svcerr.NewInvalidArgumentsError("ID", "must be 1 or greater")
+		return entities.User{}, svcerr.NewInvalidArgumentsError(paramIDStr, ruleMsgID)
 	}
 
 	return svc.repository.GetUser(id)

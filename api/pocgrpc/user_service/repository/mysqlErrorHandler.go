@@ -17,33 +17,35 @@ type MySQLErrorHandler struct {
 	Logger log.Logger
 }
 
-const (
-	sqlErrHandlerKey = "status"
-)
-
 func (handler MySQLErrorHandler) CreateUserServiceError(err error, user entities.User) error {
-	level.Info(handler.Logger).Log(sqlErrHandlerKey, "handling mySQL error")
+	level.Info(handler.Logger).Log(nrmStatusKey, "handling mySQL error")
 
 	if err == sql.ErrNoRows {
 		return svcerr.NewUserNotFoundError(user.Name, user.ID)
 	}
 
-	if driverErr, ok := err.(*mysql.MySQLError); ok {
-		switch driverErr.Number {
-		case mysqlerr.ER_BINLOG_UNSAFE_INSERT_TWO_KEYS:
-			return svcerr.NewUserAlreadyExistError(user.Name, user.ID)
-		case mysqlerr.ER_RPL_INFO_DATA_TOO_LONG:
-			return svcerr.NewInvalidArgumentsError("user", "data too long")
-		case mysqlerr.ER_NO_REFERENCED_ROW:
-			return svcerr.NewUserNotUpdatedError(user.ID, driverErr.Message)
-		case mysqlerr.ER_ROW_IS_REFERENCED:
-			return svcerr.NewUserNotUpdatedError(user.ID, driverErr.Message)
-		case mysqlerr.ER_AUTO_INCREMENT_CONFLICT:
-			return svcerr.NewUserNotUpdatedError(user.ID, driverErr.Message)
-		default:
-			return errors.New("operation failed")
-		}
+	driverErr, ok := err.(*mysql.MySQLError)
+	if !ok {
+		level.Error(handler.Logger).Log(msgMysqlErrUnknown, err)
+		return err
 	}
-	level.Error(handler.Logger).Log("not a known mysql error", err)
-	return err
+
+	return sqlErrorToServiceError(driverErr, user)
+}
+
+func sqlErrorToServiceError(err *mysql.MySQLError, user entities.User) error {
+	switch err.Number {
+	case mysqlerr.ER_BINLOG_UNSAFE_INSERT_TWO_KEYS:
+		return svcerr.NewUserAlreadyExistError(user.Name, user.ID)
+	case mysqlerr.ER_RPL_INFO_DATA_TOO_LONG:
+		return svcerr.NewInvalidArgumentsError(paramUsrStr, "data too long")
+	case mysqlerr.ER_NO_REFERENCED_ROW:
+		return svcerr.NewUserNotUpdatedError(user.ID, err.Message)
+	case mysqlerr.ER_ROW_IS_REFERENCED:
+		return svcerr.NewUserNotUpdatedError(user.ID, err.Message)
+	case mysqlerr.ER_AUTO_INCREMENT_CONFLICT:
+		return svcerr.NewUserNotUpdatedError(user.ID, err.Message)
+	default:
+		return errors.New(msgOperationFail)
+	}
 }

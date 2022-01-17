@@ -9,5 +9,5 @@ type getUserResponse struct {
 
 type createUserResponse struct {
 	status error
-	Id     int64
+	id     int64
 }

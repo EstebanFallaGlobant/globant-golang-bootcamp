@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/entities"
 	svcerr "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/error"
@@ -33,28 +32,26 @@ func makeGetCreateUserEndpoint(svc service, logger kitlog.Logger) endpoint.Endpo
 		req, ok := request.(createUserRequest)
 
 		if !ok {
-			level.Error(logger).Log("message", "invalid request")
-			err := svcerr.NewInvalidRequestError("request could not be parsed")
+			level.Error(logger).Log(msgRqstNotParsed, request)
+			err := svcerr.NewInvalidRequestError(msgRqstNotParsed)
 			return createUserResponse{status: err}, err
 		}
 
 		if err := req.Validate(); err != nil {
-			level.Error(logger).Log("error in user", err)
-
+			level.Error(logger).Log(msgRqstInvalid, err)
 			err = svcerr.NewInvalidRequestError(err.Error())
-
 			return createUserResponse{status: err}, err
 		}
 
 		id, err := svc.CreateUser(ctx, req.user)
 
 		if err != nil {
-			level.Error(logger).Log("message", "error creating user")
+			level.Error(logger).Log(errStatusKey, err)
 			return createUserResponse{status: err}, err
 		}
 
 		return createUserResponse{
-			Id: id,
+			id: id,
 		}, nil
 	}
 }
@@ -64,16 +61,14 @@ func makeGetGetUserEndpoint(svc service, logger kitlog.Logger) endpoint.Endpoint
 		req, ok := request.(getUserRequest)
 
 		if !ok {
-			level.Error(logger).Log(fmt.Sprintf("invalid request: %v", request))
-			err := svcerr.NewInvalidRequestError("request could not be parsed")
+			level.Error(logger).Log(msgRqstNotParsed, request)
+			err := svcerr.NewInvalidRequestError(msgRqstNotParsed)
 			return getUserResponse{status: err}, err
 		}
 
 		if err := req.Validate(); err != nil {
-			level.Error(logger).Log("invalid request", err)
-
+			level.Error(logger).Log(msgRqstInvalid, err)
 			err := svcerr.NewInvalidRequestError(err.Error())
-
 			return getUserResponse{status: err}, err
 		}
 

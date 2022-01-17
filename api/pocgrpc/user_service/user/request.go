@@ -17,7 +17,7 @@ type getUserRequest struct {
 
 func (req createUserRequest) Validate() error {
 	if req.user.ID != 0 {
-		return svcerr.NewInvalidArgumentsError("ID", "must be 0")
+		return svcerr.NewInvalidArgumentsError(paramIDStr, ruleMsgCrtRqst)
 	}
 
 	return req.user.Validate()
@@ -25,7 +25,7 @@ func (req createUserRequest) Validate() error {
 
 func (req getUserRequest) Validate() error {
 	if req.id < 1 {
-		return svcerr.NewInvalidArgumentsError("ID", "must be 1 or greater")
+		return svcerr.NewInvalidArgumentsError(paramIDStr, ruleMsgGetRqst)
 	}
 
 	return nil

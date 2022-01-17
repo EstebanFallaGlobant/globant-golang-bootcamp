@@ -15,10 +15,10 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// Test queries
 const (
-	insertUserQueryTest    = "INSERT INTO user_data"
-	getUserQueryTest       = "SELECT"
-	getUserByNameQueryTest = "SELECT"
+	insertUserQueryTest = "INSERT INTO user_data"
+	getUserQueryTest    = "SELECT"
 )
 
 type mockSQLErrorHandler struct {
@@ -237,7 +237,7 @@ func Test_GetUserByName(t *testing.T) {
 				Name: "Test User",
 			},
 			configMock: func(mock sqlmock.Sqlmock, name string, resultUser entities.User) sqlmock.Sqlmock {
-				mock.ExpectPrepare(getUserByNameQueryTest).
+				mock.ExpectPrepare(getUserQueryTest).
 					ExpectQuery().
 					WithArgs(strings.ToLower(name)).
 					WillReturnRows(
@@ -257,7 +257,7 @@ func Test_GetUserByName(t *testing.T) {
 				Name: "Test User",
 			},
 			configMock: func(mock sqlmock.Sqlmock, name string, resultUser entities.User) sqlmock.Sqlmock {
-				mock.ExpectPrepare(getUserByNameQueryTest).
+				mock.ExpectPrepare(getUserQueryTest).
 					ExpectQuery().
 					WithArgs(strings.ToLower(name)).
 					WillReturnRows(

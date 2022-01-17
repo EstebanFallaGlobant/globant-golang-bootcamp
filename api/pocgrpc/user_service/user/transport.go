@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/entities"
 	svcerr "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/error"
@@ -47,7 +46,7 @@ func NewgRPCServer(endpoints Endpoints, logger kitlog.Logger, errorHandler error
 func (s *gRPCUserInfoService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	_, resp, err := s.createUser.ServeGRPC(ctx, req)
 	if err != nil {
-		level.Error(s.logger).Log("failed", err)
+		level.Error(s.logger).Log(failStatusKey, err)
 		responseError := s.errHandler.TogRPCStatus(err)
 		return &pb.CreateUserResponse{
 			Status: responseError,
@@ -59,7 +58,7 @@ func (s *gRPCUserInfoService) CreateUser(ctx context.Context, req *pb.CreateUser
 func (s *gRPCUserInfoService) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
 	_, resp, err := s.getUser.ServeGRPC(ctx, req)
 	if err != nil {
-		level.Error(s.logger).Log("failed", err)
+		level.Error(s.logger).Log(failStatusKey, err)
 		responseError := s.errHandler.TogRPCStatus(err)
 		return &pb.GetUserResponse{
 			Status: responseError,
@@ -70,17 +69,16 @@ func (s *gRPCUserInfoService) GetUser(ctx context.Context, req *pb.GetUserReques
 
 func makeDecodeCreateUserRequest(logger kitlog.Logger) grpc.DecodeRequestFunc {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
-		level.Info(logger).Log("status", "decoding request")
 		req, ok := request.(*pb.CreateUserRequest)
 		if !ok {
-			level.Error(logger).Log("request couldn't be parsed", request)
-			return nil, svcerr.NewInvalidRequestError("request could not be parsed")
+			level.Error(logger).Log(msgRqstNotParsed, request)
+			return nil, svcerr.NewInvalidRequestError(msgRqstNotParsed)
 		}
-		level.Info(logger).Log("status", "request decoded")
+		level.Info(logger).Log(nrmStatusKey, msgRqstDecoded)
 		user, err := entities.NewUser(req.User.Name, req.User.PwdHash, uint8(req.User.Age), req.User.ParentId)
 
 		if err != nil {
-			level.Error(logger).Log("error creating new user", err)
+			level.Error(logger).Log(errStatusKey, err)
 			return nil, svcerr.NewInvalidRequestError(err.Error())
 		}
 
@@ -94,19 +92,19 @@ func makeEncodeCreateUserResponse(logger kitlog.Logger) grpc.EncodeResponseFunc 
 		res, ok := response.(createUserResponse)
 
 		if !ok {
-			level.Error(logger).Log("error", fmt.Sprintf("response could not be parsed: %v", response))
-			return nil, errors.New("response could not be parsed")
+			level.Error(logger).Log(msgRspNotParsed, response)
+			return nil, errors.New(msgRspNotParsed)
 		}
 
 		if res.status != nil {
-			level.Error(logger).Log("error", res.status)
+			level.Error(logger).Log(errStatusKey, res.status)
 			return nil, res.status
 		}
 
-		level.Info(logger).Log("message", "response encoded")
+		level.Info(logger).Log(nrmStatusKey, msgRspEncoded)
 
 		return &pb.CreateUserResponse{
-			Id: res.Id,
+			Id: res.id,
 		}, nil
 
 	}
@@ -114,15 +112,14 @@ func makeEncodeCreateUserResponse(logger kitlog.Logger) grpc.EncodeResponseFunc 
 
 func makeDecodeGetUserRequest(logger kitlog.Logger) grpc.DecodeRequestFunc {
 	return func(_ context.Context, request interface{}) (interface{}, error) {
-		level.Info(logger).Log("status", "decoding request")
 		req, ok := request.(*pb.GetUserRequest)
 
 		if !ok {
-			level.Error(logger).Log("request could not be parsed", request)
-			return nil, errors.New("request could not be parsed")
+			level.Error(logger).Log(msgRqstNotParsed, request)
+			return nil, errors.New(msgRqstNotParsed)
 		}
 
-		level.Info(logger).Log("request decoded", req)
+		level.Info(logger).Log(nrmStatusKey, msgRqstDecoded)
 
 		return getUserRequest{
 			authToken: req.AuthToken,
@@ -135,13 +132,15 @@ func makeEncodeGetUserResponse(logger kitlog.Logger) grpc.EncodeResponseFunc {
 	return func(_ context.Context, response interface{}) (interface{}, error) {
 		res, ok := response.(getUserResponse)
 		if !ok {
-			level.Error(logger).Log("error", fmt.Sprintf("response could not be parsed: %v", response))
-			return nil, errors.New("response could not be parsed")
+			level.Error(logger).Log(msgRspNotParsed, response)
+			return nil, errors.New(msgRspNotParsed)
 		}
 		if res.status != nil {
-			level.Error(logger).Log("error", res.status)
+			level.Error(logger).Log(errStatusKey, res.status)
 			return nil, res.status
 		}
+
+		level.Info(logger).Log(nrmStatusKey, msgRspEncoded)
 
 		return &pb.GetUserResponse{
 			Status: &pb.Err{

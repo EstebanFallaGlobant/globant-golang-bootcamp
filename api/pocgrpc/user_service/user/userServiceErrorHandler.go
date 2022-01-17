@@ -13,8 +13,9 @@ type UserServiceErrorHandler struct {
 }
 
 func (errHandler UserServiceErrorHandler) TogRPCStatus(err error) *pb.Err {
-	level.Info(errHandler.Logger).Log("status", "checking error type")
+	level.Info(errHandler.Logger).Log(nrmStatusKey, "checking error type")
 	var result pb.Err
+
 	switch err.(type) {
 	case svcerr.InvalidRequestError:
 		result.Code = uint32(codes.InvalidArgument)

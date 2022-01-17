@@ -5,6 +5,15 @@ import (
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/util"
 )
 
+const (
+	paramIDStr   = "ID"
+	paramNameStr = "name"
+	paramAgeStr  = "age"
+	paramPassStr = "password"
+	ruleMsgAge   = "must be between 1 and 150"
+	ruleMsgID    = "must be 0 or greater"
+)
+
 type User struct {
 	ID       int64
 	Name     string
@@ -36,11 +45,11 @@ func NewUser(name, pwd string, age uint8, parentId int64, options ...Initializat
 func (u User) Validate() error {
 	var params []string
 	if util.IsEmptyString(u.Name) {
-		params = append(params, "name")
+		params = append(params, paramNameStr)
 	}
 
 	if util.IsEmptyString(u.PwdHash) {
-		params = append(params, "password")
+		params = append(params, paramPassStr)
 	}
 
 	if v := len(params) > 0; v { // If one or more parameters were empty, creates a single error for all of them
@@ -48,11 +57,11 @@ func (u User) Validate() error {
 	}
 
 	if age := u.Age; age < 1 || age > 150 {
-		return svcerr.NewInvalidArgumentsError("age", "must be between 1 and 150")
+		return svcerr.NewInvalidArgumentsError(paramAgeStr, ruleMsgAge)
 	}
 
 	if u.ID < 0 {
-		return svcerr.NewInvalidArgumentsError("ID", "must be 0 or greater")
+		return svcerr.NewInvalidArgumentsError(paramIDStr, ruleMsgID)
 	}
 
 	return nil

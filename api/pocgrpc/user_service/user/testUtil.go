@@ -29,19 +29,19 @@ type connectionMock struct {
 	mock.Mock
 }
 
-func (connection *connectionMock) InsertUser(user entities.User) (int64, error) {
-	args := connection.Called(user.Name, user.PwdHash, user.Age, user.ParentID)
+func (conn *connectionMock) InsertUser(user entities.User) (int64, error) {
+	args := conn.Called(user.Name, user.PwdHash, user.Age, user.ParentID)
 	return int64(args.Int(0)), args.Error(1)
 }
 
-func (connection *connectionMock) GetUser(id int64) (entities.User, error) {
-	args := connection.Called(id)
+func (conn *connectionMock) GetUser(id int64) (entities.User, error) {
+	args := conn.Called(id)
 
 	return args.Get(0).(entities.User), args.Error(1)
 }
 
-func (c connectionMock) GetUserByName(name string) (entities.User, error) {
-	args := c.Called(name)
+func (conn connectionMock) GetUserByName(name string) (entities.User, error) {
+	args := conn.Called(name)
 	return args.Get(0).(entities.User), args.Error(1)
 }
 

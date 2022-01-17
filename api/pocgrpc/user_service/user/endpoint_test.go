@@ -36,7 +36,7 @@ func Test_CreateUserEndpoint(t *testing.T) {
 				} else {
 					assert.NoError(t, err)
 					assert.NotNil(t, res)
-					assert.EqualValues(t, 1, res.Id)
+					assert.EqualValues(t, 1, res.id)
 				}
 			},
 			expectedId: 1,
@@ -74,7 +74,7 @@ func Test_CreateUserEndpoint(t *testing.T) {
 					t.Fatal(errors.New("response could not be parsed"))
 				} else {
 					assert.Error(t, err)
-					assert.EqualValues(t, 0, res.Id)
+					assert.EqualValues(t, 0, res.id)
 				}
 
 			},
