@@ -6,6 +6,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/entities"
+	svcerr "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/error"
 	kitlog "github.com/go-kit/log"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,7 +17,7 @@ func Test_CreateUserEndpoint(t *testing.T) {
 		name          string
 		getRequest    func() interface{}
 		checkResponse func(res interface{}, err error, t *testing.T)
-		srvUser       User
+		srvUser       entities.User
 		expectedId    int
 		expectedError error
 	}{
@@ -34,7 +36,7 @@ func Test_CreateUserEndpoint(t *testing.T) {
 				} else {
 					assert.NoError(t, err)
 					assert.NotNil(t, res)
-					assert.EqualValues(t, 1, res.Id)
+					assert.EqualValues(t, 1, res.id)
 				}
 			},
 			expectedId: 1,
@@ -53,7 +55,7 @@ func Test_CreateUserEndpoint(t *testing.T) {
 			},
 			checkResponse: func(res interface{}, err error, t *testing.T) {
 				assert.Error(t, err)
-				assert.ErrorAs(t, NewInvalidRequestError(), &err)
+				assert.ErrorAs(t, svcerr.NewInvalidRequestError(""), &err)
 			},
 			srvUser: getNewUser(),
 		},
@@ -72,7 +74,7 @@ func Test_CreateUserEndpoint(t *testing.T) {
 					t.Fatal(errors.New("response could not be parsed"))
 				} else {
 					assert.Error(t, err)
-					assert.EqualValues(t, 0, res.Id)
+					assert.EqualValues(t, 0, res.id)
 				}
 
 			},
@@ -107,9 +109,9 @@ func Test_GetUserEndpoint(t *testing.T) {
 	testCases := []struct {
 		name          string
 		getRequest    func() interface{}
-		checkResponse func(t *testing.T, response interface{}, expectedUser User, err error)
+		checkResponse func(t *testing.T, response interface{}, expectedUser entities.User, err error)
 		userId        int64
-		expectedUser  User
+		expectedUser  entities.User
 		expectedError error
 	}{
 		{
@@ -121,13 +123,13 @@ func Test_GetUserEndpoint(t *testing.T) {
 				}
 			},
 			userId: 2,
-			expectedUser: User{
-				Id:      2,
+			expectedUser: entities.User{
+				ID:      2,
 				Name:    "Test User",
 				PwdHash: "Test Password",
 				Age:     20,
 			},
-			checkResponse: func(t *testing.T, response interface{}, expectedUser User, err error) {
+			checkResponse: func(t *testing.T, response interface{}, expectedUser entities.User, err error) {
 				if res, ok := response.(getUserResponse); !ok {
 					t.Fatal("response coul not be parsed")
 				} else {
@@ -150,28 +152,29 @@ func Test_GetUserEndpoint(t *testing.T) {
 				}
 				return request
 			},
-			checkResponse: func(t *testing.T, response interface{}, expectedUser User, err error) {
+			checkResponse: func(t *testing.T, response interface{}, expectedUser entities.User, err error) {
 				if res, ok := response.(getUserResponse); !ok {
 					t.Fatal("response could not be parsed")
 				} else {
 					assert.Error(t, err)
 					assert.Error(t, res.status)
 					assert.EqualValues(t, expectedUser, res.user)
-					assert.IsType(t, NewInvalidRequestError(), err)
+					assert.IsType(t, svcerr.NewInvalidRequestError(""), err)
 				}
 
 			},
 		},
 		{
-			name: "Test service error",
+			name:   "Test service error",
+			userId: 1,
 			getRequest: func() interface{} {
 				return getUserRequest{
 					authToken: "Test Token",
-					id:        0,
+					id:        1,
 				}
 			},
 			expectedError: errors.New("Service error"),
-			checkResponse: func(t *testing.T, response interface{}, expectedUser User, err error) {
+			checkResponse: func(t *testing.T, response interface{}, expectedUser entities.User, err error) {
 				if res, ok := response.(getUserResponse); !ok {
 					t.Fatal("response could not be parsed")
 				} else {

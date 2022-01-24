@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch poc_gRPC API",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/api/pocgrpc/user_service/cmd",
+            "args": [],
+            "env": {
+                "udsConnStr": "POC_gRPC:P0cP4ssw0rd*@tcp(127.0.0.1:3308)/gRPC_Db",
+                "udsAddr": ":5050"
+            }
+        }
+    ]
+}

@@ -5,12 +5,14 @@ import (
 
 	"github.com/go-kit/log"
 
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/util"
+	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/entities"
+	svcerr "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/user_service/error"
 )
 
 type Repository interface {
-	InsertUser(user User) (int64, error)
-	GetUser(id int64) (User, error)
+	InsertUser(user entities.User) (int64, error)
+	GetUser(id int64) (entities.User, error)
+	GetUserByName(name string) (entities.User, error)
 }
 type userInfoService struct {
 	repository Repository
@@ -27,33 +29,19 @@ func NewService(repo Repository, logger log.Logger) *userInfoService {
 // Creates an user if the information provided is valid.
 //
 // The users name and password must not be empty strings.
-func (service *userInfoService) CreateUser(ctx context.Context, user User) (int64, error) {
-	var err error = nil
-	var params []string
-	var resId int64
-	if util.IsEmptyString(user.Name) {
-		params = append(params, "name")
+func (svc *userInfoService) CreateUser(ctx context.Context, user entities.User) (int64, error) {
+
+	if userFound, _ := svc.repository.GetUserByName(user.Name); userFound.ID != 0 {
+		return 0, svcerr.NewUserAlreadyExistError(userFound.Name, userFound.ID)
 	}
 
-	if util.IsEmptyString(user.PwdHash) {
-		params = append(params, "password")
-	}
-
-	if v := len(params) > 0; v { // If one or more parameters were empty, creates a single error for all of them
-		err = NewArgumentsRequiredError(params...)
-	} else if age := user.Age; age < 1 || age > 150 {
-		err = NewInvalidArgumentsError("age", "between 1 and 150")
-	} else {
-		resId, err = service.repository.InsertUser(user)
-	}
-
-	return resId, err
+	return svc.repository.InsertUser(user)
 }
 
-func (service *userInfoService) GetUser(ctx context.Context, id int64) (User, error) {
+func (svc *userInfoService) GetUser(ctx context.Context, id int64) (entities.User, error) {
 	if id < 1 {
-		return User{}, NewInvalidArgumentsError("id", "must be 1 or greater")
-	} else {
-		return service.repository.GetUser(id)
+		return entities.User{}, svcerr.NewInvalidArgumentsError(paramIDStr, ruleMsgID)
 	}
+
+	return svc.repository.GetUser(id)
 }
