@@ -9,27 +9,46 @@ import (
 const (
 	unknownParamName = "unknown"
 	unknownParamRule = "is invalid"
+	invRqstGenMsg    = "request is invalid"
+	invRqstSpcMsg    = "invalid request:"
 )
 
-type invalidArgumentError struct {
+type InvalidArgumentError struct {
 	name string
 	rule string
 }
 
-func NewInvalidArgumentError(argName string, argRule string) invalidArgumentError {
+func (err InvalidArgumentError) Error() string {
+	if util.IsEmptyString(err.rule) {
+		return fmt.Sprintf("parameter \"%s\" %s", err.name, unknownParamRule)
+	}
+	return fmt.Sprintf("parameter \"%s\" invalid: \"%s\"", err.name, err.rule)
+}
+
+func NewInvalidArgumentError(argName string, argRule string) InvalidArgumentError {
 	if util.IsEmptyString(argName) {
 		argName = unknownParamName
 	}
 
-	return invalidArgumentError{
+	return InvalidArgumentError{
 		name: argName,
 		rule: argRule,
 	}
 }
 
-func (err invalidArgumentError) Error() string {
-	if util.IsEmptyString(err.rule) {
-		return fmt.Sprintf("parameter \"%s\" %s", err.name, unknownParamRule)
+type InvalidRequestError struct {
+	message string
+}
+
+func (err InvalidRequestError) Error() string {
+	if util.IsEmptyString(err.message) {
+		return invRqstGenMsg
 	}
-	return fmt.Sprintf("parameter \"%s\" invalid: \"%s\"", err.name, err.rule)
+	return fmt.Sprintf("%s %s", invRqstSpcMsg, err.message)
+}
+
+func NewInvalidRequestError(msg string) InvalidRequestError {
+	return InvalidRequestError{
+		message: msg,
+	}
 }

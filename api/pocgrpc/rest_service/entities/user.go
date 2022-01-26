@@ -6,11 +6,11 @@ import (
 )
 
 type User struct {
-	ID       int64
-	Name     string
-	Password string
-	Age      uint8
-	ParentID int64
+	ID       int64  `json:"user_id"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Age      uint8  `json:"age"`
+	ParentID int64  `json:"parent_id"`
 }
 
 func (usr *User) Validate() []error {

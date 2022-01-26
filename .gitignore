@@ -16,5 +16,6 @@
 
 # Exclude out files used for code coverage revision
 *.out
+
 # Exclude config file for vscode extension protolint
 .protolint* 
