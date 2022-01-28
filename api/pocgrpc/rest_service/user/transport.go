@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/rest_service/entities"
 	svcerr "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/rest_service/error"
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -14,17 +13,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type userService interface {
-	GetUser(id int64) (entities.User, error)
-}
-
 type endpoints interface {
 	MakeGetUserEndpoint() endpoint.Endpoint
 }
-
-const (
-	getUserPath = "/user"
-)
 
 func NewHTTPServer(logger kitlog.Logger, endpoints endpoints) *mux.Router {
 	options := []httptransport.ServerOption{
@@ -68,7 +59,7 @@ func encodeErrorResponse(_ context.Context, err error, w http.ResponseWriter) {
 func makeDecodeGetUserRequest(logger kitlog.Logger) httptransport.DecodeRequestFunc {
 	return func(c context.Context, r *http.Request) (request interface{}, err error) {
 		id, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
-		token := r.Header.Get("Authentication-Token")
+		token := r.Header.Get(authTknHeaderName)
 
 		if err != nil {
 			return nil, err
@@ -79,9 +70,9 @@ func makeDecodeGetUserRequest(logger kitlog.Logger) httptransport.DecodeRequestF
 }
 
 func makeEncodeGetUserResponse(logger kitlog.Logger) httptransport.EncodeResponseFunc {
-	return func(c context.Context, rw http.ResponseWriter, i interface{}) error {
+	return func(c context.Context, rw http.ResponseWriter, response interface{}) error {
 		rw.WriteHeader(http.StatusOK)
-		return json.NewEncoder(rw).Encode(i)
+		return json.NewEncoder(rw).Encode(response)
 	}
 }
 

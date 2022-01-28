@@ -73,14 +73,14 @@ func main() {
 	level.Info(logger).Log(statusMsg, "Listener created")
 
 	go func() {
-		server := grpc.NewServer()
+		baseServer := grpc.NewServer()
 
-		pb.RegisterUserDetailServiceServer(server, grpcServer)
+		pb.RegisterUserDetailServiceServer(baseServer, grpcServer)
 
 		level.Info(logger).Log(statusMsg, "server registered")
 		level.Info(logger).Log("listening at", address)
 
-		if err := server.Serve(grpcListener); err != nil {
+		if err := baseServer.Serve(grpcListener); err != nil {
 			level.Error(logger).Log("server error", err)
 		}
 	}()

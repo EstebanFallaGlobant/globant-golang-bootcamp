@@ -16,7 +16,7 @@ func (r getUserRequest) Validate() error {
 		return svcerr.NewInvalidRequestError(invRqstEmptyTknMsg)
 	}
 
-	if r.userID < 0 {
+	if r.userID <= 0 {
 		return svcerr.NewInvalidRequestError(invRqstIDLessThanOne)
 	}
 

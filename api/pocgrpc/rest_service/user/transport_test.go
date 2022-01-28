@@ -1,7 +1,6 @@
 package user
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,42 +13,9 @@ import (
 
 	"github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/rest_service/entities"
 	svcerr "github.com/EstebanFallaGlobant/globant-golang-bootcamp/api/pocgrpc/rest_service/error"
-	"github.com/go-kit/kit/endpoint"
 	kitlog "github.com/go-kit/log"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
-
-type mockSvc struct {
-	mock.Mock
-}
-
-func (mock mockSvc) GetUser(id int64) (entities.User, error) {
-	args := mock.Called(id)
-	return args.Get(0).(entities.User), args.Error(1)
-}
-
-type mockEndpoints struct {
-	// mock.Mock
-	svc    userService
-	logger kitlog.Logger
-}
-
-func (mock mockEndpoints) MakeGetUserEndpoint() endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req, ok := request.(getUserRequest)
-
-		if !ok {
-			return nil, svcerr.NewInvalidRequestError("")
-		}
-
-		if err := req.Validate(); err != nil {
-			return nil, err
-		}
-
-		return mock.svc.GetUser(req.userID)
-	}
-}
 
 func Test_GetUser(t *testing.T) {
 	testCases := []struct {
@@ -110,6 +76,17 @@ func Test_GetUser(t *testing.T) {
 				assert.Equal(t, http.StatusMethodNotAllowed, result.StatusCode)
 			},
 		},
+		{
+			name:          "Test service error",
+			searchID:      genericID,
+			requestMethod: http.MethodGet,
+			searchHeader:  map[string]string{authTknHeaderName: genericToken},
+			expectedUsr:   entities.User{},
+			expectedErr:   svcerr.NewInvalidArgumentError(genericArgumentName, genericArgumentRule),
+			checkResult: func(t *testing.T, result *http.Response, expectedUser entities.User) {
+				assert.EqualValues(t, http.StatusBadRequest, result.StatusCode)
+			},
+		},
 	}
 
 	var logger kitlog.Logger
@@ -149,15 +126,6 @@ func Test_GetUser(t *testing.T) {
 		})
 	}
 }
-
-func createNewRequest(method, url string, body io.Reader, headers map[string]string) *http.Request {
-	request, _ := http.NewRequest(method, url, body)
-	for key, value := range headers {
-		request.Header.Set(key, value)
-	}
-	return request
-}
-
 func Test_getErrorCode(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -188,4 +156,12 @@ func Test_getErrorCode(t *testing.T) {
 			assert.EqualValues(t, tc.expectedCode, code)
 		})
 	}
+}
+
+func createNewRequest(method, url string, body io.Reader, headers map[string]string) *http.Request {
+	request, _ := http.NewRequest(method, url, body)
+	for key, value := range headers {
+		request.Header.Set(key, value)
+	}
+	return request
 }
