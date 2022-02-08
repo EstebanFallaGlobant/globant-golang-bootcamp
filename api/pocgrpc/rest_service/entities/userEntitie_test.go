@@ -7,12 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	testPassword = "testpassword"
-	testUsrName  = "Test User"
-	testUsrAge   = uint8(50)
-)
-
 func Test_UserValidate_StringParams(t *testing.T) {
 	testCases := []struct {
 		name        string

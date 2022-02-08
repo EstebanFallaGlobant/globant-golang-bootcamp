@@ -18,3 +18,9 @@ const (
 	ruleGreaterThanAllowedAge = "must be less or equal to " + string(MaxAllowedAge)
 	ruleLessThanZero          = "must be greater or equal to 0"
 )
+
+const (
+	testPassword = "testpassword"
+	testUsrName  = "Test User"
+	testUsrAge   = uint8(50)
+)
